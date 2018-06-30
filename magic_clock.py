@@ -3,6 +3,13 @@ import json
 # import RPi.GPIO as GPIO
 import time
 
+DEBUG_MODE = False
+
+class Clock():
+    def __init__(self):
+        self.jesse_hand = 0
+        self.megan_hand = 0
+
 
 def get_jesse_location():
     """Get Jesse's location from Home Assistant"""
@@ -29,6 +36,8 @@ def get_jesse_travelling():
 
 
 def get_jesse_status():
+    if DEBUG_MODE == True:
+        return int(input())
     if get_jesse_location() == "home" and get_jesse_travelling() == \
             "arrived" or get_jesse_travelling() == "stationary":
         # return "Home"
@@ -61,17 +70,34 @@ def get_jesse_status():
         return 7
 
 
-def move_clock_hand(clock_position, new_clock_position):
+def calculate_clock_hand_steps(clock):
+    clock = clock
+    new_position = get_jesse_status()
+    steps = 0
+
+    if new_position == clock.jesse_hand:
+        pass
+    else:
+        steps = new_position - clock.jesse_hand
+
+    return steps
+
+
+def move_clock_hand(clock, steps):
+    clock.jesse_hand = clock.jesse_hand + steps
 
 
 def __main__():
-    clock_position = 0
+    clock = Clock()
     while True:
-        jesse = get_jesse_status()
-
+        print("current position {}".format(clock.jesse_hand))
+        num_steps = calculate_clock_hand_steps(clock)
+        move_clock_hand(clock, num_steps)
 
         time.sleep(1)
-        print(jesse)
+
+
+
 
 if __name__ == "__main__":
     __main__()
