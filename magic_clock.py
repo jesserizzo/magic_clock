@@ -1,14 +1,73 @@
 import requests
 import json
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 
 DEBUG_MODE = False
+DELAY = 1
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+coil_A_1_pin = 6 # pink
+coil_A_2_pin = 13 # orange
+coil_B_1_pin = 19 # blue
+coil_B_2_pin = 26 # yellow
+
+# adjust if different
+StepCount = 8
+clockwise = range(0, StepCount)
+clockwise[0] = [0,0,0,1]
+clockwise[1] = [0,0,1,1]
+clockwise[2] = [0,0,1,0]
+clockwise[3] = [0,1,1,0]
+clockwise[4] = [0,1,0,0]
+clockwise[5] = [1,1,0,0]
+clockwise[6] = [1,0,0,0]
+clockwise[7] = [1,0,0,1]
+
+counter_clockwise = range(0, StepCount)
+counter_clockwise[0] = [1,0,0,0]
+counter_clockwise[1] = [1,1,0,0]
+counter_clockwise[2] = [0,1,0,0]
+counter_clockwise[3] = [0,1,1,0]
+counter_clockwise[4] = [0,0,1,0]
+counter_clockwise[5] = [0,0,1,1]
+counter_clockwise[6] = [0,0,0,1]
+counter_clockwise[7] = [1,0,0,1]
+
+# GPIO.setup(enable_pin, GPIO.OUT)
+GPIO.setup(coil_A_1_pin, GPIO.OUT)
+GPIO.setup(coil_A_2_pin, GPIO.OUT)
+GPIO.setup(coil_B_1_pin, GPIO.OUT)
+GPIO.setup(coil_B_2_pin, GPIO.OUT)
+
+# GPIO.output(enable_pin, 1)
 
 class Clock():
     def __init__(self):
         self.jesse_hand = 0
         self.megan_hand = 0
+
+
+def setStep(w1, w2, w3, w4):
+    GPIO.output(coil_A_1_pin, w1)
+    GPIO.output(coil_A_2_pin, w2)
+    GPIO.output(coil_B_1_pin, w3)
+    GPIO.output(coil_B_2_pin, w4)
+
+
+def forward(steps):
+    for i in range(steps):
+        for j in range(StepCount):
+            setStep(clockwise[j][0], clockwise[j][1], clockwise[j][2], clockwise[j][3])
+            time.sleep(DELAY)
+
+
+def backwards(steps):
+    for i in range(steps):
+        for j in range(StepCount):
+            setStep(counter_clockwise[j][0], counter_clockwise[j][1], counter_clockwise[j][2], counter_clockwise[j][3])
+            time.sleep(DELAY)
 
 
 def get_jesse_location():
@@ -70,7 +129,7 @@ def get_jesse_status():
         return 7
 
 
-def calculate_clock_hand_steps(clock):
+def update_clock_hand(clock):
     clock = clock
     new_position = get_jesse_status()
     steps = 0
@@ -79,84 +138,24 @@ def calculate_clock_hand_steps(clock):
         pass
     else:
         steps = new_position - clock.jesse_hand
-
+        clock.jesse_hand = clock.jesse_hand + steps
     return steps
 
 
-def move_clock_hand(clock, steps):
-    clock.jesse_hand = clock.jesse_hand + steps
 
 
 def __main__():
     clock = Clock()
     while True:
         print("current position {}".format(clock.jesse_hand))
-        num_steps = calculate_clock_hand_steps(clock)
-        move_clock_hand(clock, num_steps)
+        num_steps = update_clock_hand(clock)
+        if num_steps > 0:
+            forward(num_steps)
+        elif num_steps < 0:
+            backwards(abs(num_steps))
 
         time.sleep(1)
 
 
-
-
 if __name__ == "__main__":
     __main__()
-
-
-"""
-import RPi.GPIO as GPIO
-import time
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-coil_A_1_pin = 4 # pink
-coil_A_2_pin = 17 # orange
-coil_B_1_pin = 23 # blue
-coil_B_2_pin = 24 # yellow
-
-# adjust if different
-StepCount = 8
-Seq = range(0, StepCount)
-Seq[0] = [0,1,0,0]
-Seq[1] = [0,1,0,1]
-Seq[2] = [0,0,0,1]
-Seq[3] = [1,0,0,1]
-Seq[4] = [1,0,0,0]
-Seq[5] = [1,0,1,0]
-Seq[6] = [0,0,1,0]
-Seq[7] = [0,1,1,0]
-
-GPIO.setup(enable_pin, GPIO.OUT)
-GPIO.setup(coil_A_1_pin, GPIO.OUT)
-GPIO.setup(coil_A_2_pin, GPIO.OUT)
-GPIO.setup(coil_B_1_pin, GPIO.OUT)
-GPIO.setup(coil_B_2_pin, GPIO.OUT)
-
-GPIO.output(enable_pin, 1)
-
-def setStep(w1, w2, w3, w4):
-    GPIO.output(coil_A_1_pin, w1)
-    GPIO.output(coil_A_2_pin, w2)
-    GPIO.output(coil_B_1_pin, w3)
-    GPIO.output(coil_B_2_pin, w4)
-
-def forward(delay, steps):
-    for i in range(steps):
-        for j in range(StepCount):
-            setStep(Seq[j][0], Seq[j][1], Seq[j][2], Seq[j][3])
-            time.sleep(delay)
-
-def backwards(delay, steps):
-    for i in range(steps):
-        for j in reversed(range(StepCount)):
-            setStep(Seq[j][0], Seq[j][1], Seq[j][2], Seq[j][3])
-            time.sleep(delay)
-
-if __name__ == '__main__':
-    while True:
-        delay = raw_input("Time Delay (ms)?")
-        steps = raw_input("How many steps forward? ")
-        forward(int(delay) / 1000.0, int(steps))
-        steps = raw_input("How many steps backwards? ")
-        backwards(int(delay) / 1000.0, int(steps))
-"""
