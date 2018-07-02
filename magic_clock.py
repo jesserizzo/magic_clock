@@ -8,32 +8,31 @@ DELAY = 1
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-coil_A_1_pin = 6 # pink
-coil_A_2_pin = 13 # orange
-coil_B_1_pin = 19 # blue
-coil_B_2_pin = 26 # yellow
+coil_A_1_pin = 6 #  pink
+coil_A_2_pin = 13 #  orange
+coil_B_1_pin = 19 #  blue
+coil_B_2_pin = 26 #  yellow
 
 # adjust if different
-StepCount = 8
-clockwise = range(0, StepCount)
-clockwise[0] = [0,0,0,1]
-clockwise[1] = [0,0,1,1]
-clockwise[2] = [0,0,1,0]
-clockwise[3] = [0,1,1,0]
-clockwise[4] = [0,1,0,0]
-clockwise[5] = [1,1,0,0]
-clockwise[6] = [1,0,0,0]
-clockwise[7] = [1,0,0,1]
+clockwise = [0, 1, 2, 3, 4, 5, 6, 7]
+clockwise[0] = [0, 0 ,0, 1]
+clockwise[1] = [0, 0, 1, 1]
+clockwise[2] = [0, 0, 1, 0]
+clockwise[3] = [0, 1, 1, 0]
+clockwise[4] = [0, 1, 0, 0]
+clockwise[5] = [1, 1, 0, 0]
+clockwise[6] = [1, 0, 0, 0]
+clockwise[7] = [1, 0, 0, 1]
 
-counter_clockwise = range(0, StepCount)
-counter_clockwise[0] = [1,0,0,0]
-counter_clockwise[1] = [1,1,0,0]
-counter_clockwise[2] = [0,1,0,0]
-counter_clockwise[3] = [0,1,1,0]
-counter_clockwise[4] = [0,0,1,0]
-counter_clockwise[5] = [0,0,1,1]
-counter_clockwise[6] = [0,0,0,1]
-counter_clockwise[7] = [1,0,0,1]
+counter_clockwise = [0, 1, 2, 3, 4, 5, 6, 7]
+counter_clockwise[0] = [1, 0, 0, 0]
+counter_clockwise[1] = [1, 1, 0, 0]
+counter_clockwise[2] = [0, 1, 0, 0]
+counter_clockwise[3] = [0, 1, 1, 0]
+counter_clockwise[4] = [0, 0, 1, 0]
+counter_clockwise[5] = [0, 0, 1, 1]
+counter_clockwise[6] = [0, 0, 0, 1]
+counter_clockwise[7] = [1, 0, 0, 1]
 
 # GPIO.setup(enable_pin, GPIO.OUT)
 GPIO.setup(coil_A_1_pin, GPIO.OUT)
@@ -42,6 +41,7 @@ GPIO.setup(coil_B_1_pin, GPIO.OUT)
 GPIO.setup(coil_B_2_pin, GPIO.OUT)
 
 # GPIO.output(enable_pin, 1)
+
 
 class Clock():
     def __init__(self):
@@ -95,7 +95,7 @@ def get_jesse_travelling():
 
 
 def get_jesse_status():
-    if DEBUG_MODE == True:
+    if DEBUG_MODE is True:
         return int(input())
     if get_jesse_location() == "home":
         # return "Home"
@@ -136,8 +136,6 @@ def update_clock_hand(clock):
         steps = new_position - clock.jesse_hand
         clock.jesse_hand = clock.jesse_hand + steps
     return steps
-
-
 
 
 def __main__():
