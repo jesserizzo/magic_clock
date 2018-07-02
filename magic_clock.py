@@ -95,6 +95,8 @@ def get_jesse_travelling():
 
 
 def get_jesse_status():
+    if DEBUG_MODE is True:
+        return (int(input()))
     if get_jesse_location() == "home":
         # return "Home"
         return 0
@@ -104,14 +106,14 @@ def get_jesse_status():
     elif get_jesse_location() == "work":
         # return "Work"
         return 2
-    elif get_jesse_travelling() == "towards" or get_jesse_travelling() \
-            == "away_from":
+    elif get_jesse_location() = "away" and get_jesse_travelling() == \
+            "towards" or get_jesse_travelling() == "away_from":
         # return "Travelling"
         return 3
-    if get_jesse_location() == "away" and get_jesse_travelling() \
+    """elif get_jesse_location() == "away" and get_jesse_travelling() \
             == "stationary":
         # return "Lost"
-        return 4
+        return 4"""
     elif get_jesse_location() == "hospital":
         # return "Hospital"
         return 5
@@ -141,12 +143,13 @@ def __main__():
     try:
         while True:
             if DEBUG_MODE is True:
-                print("current position {}".format(clock.jesse_hand))
+                """print("current position {}".format(clock.jesse_hand))
                 forward(64)
                 time.sleep(1)
                 print("current position {}".format(clock.jesse_hand))
                 backwards(64)
-                time.sleep(1)
+                time.sleep(1)"""
+                pass
             else:
                 print("current position {}".format(clock.jesse_hand))
                 num_steps = update_clock_hand(clock)
