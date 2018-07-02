@@ -3,8 +3,8 @@ import json
 import RPi.GPIO as GPIO
 import time
 
-DEBUG_MODE = False
-DELAY = 1
+DEBUG_MODE = True
+DELAY = 0.1
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
