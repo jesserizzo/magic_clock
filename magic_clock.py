@@ -3,7 +3,7 @@ import json
 import RPi.GPIO as GPIO
 import time
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 DELAY = 0.01
 
 GPIO.setmode(GPIO.BCM)
@@ -145,9 +145,9 @@ def __main__():
             print("current position {}".format(clock.jesse_hand))
             num_steps = update_clock_hand(clock)
             if num_steps > 0:
-                forward(num_steps * 8)
+                forward(num_steps * 64)
             elif num_steps < 0:
-                backwards(abs(num_steps * 8))
+                backwards(abs(num_steps * 64))
 
             time.sleep(1)
     except KeyboardInterrupt:
