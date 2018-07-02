@@ -58,14 +58,14 @@ def setStep(w1, w2, w3, w4):
 
 def forward(steps):
     for i in range(steps):
-        for j in range(StepCount):
+        for j in range(8):
             setStep(clockwise[j][0], clockwise[j][1], clockwise[j][2], clockwise[j][3])
             time.sleep(DELAY)
 
 
 def backwards(steps):
     for i in range(steps):
-        for j in range(StepCount):
+        for j in range(8):
             setStep(counter_clockwise[j][0], counter_clockwise[j][1], counter_clockwise[j][2], counter_clockwise[j][3])
             time.sleep(DELAY)
 
