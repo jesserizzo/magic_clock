@@ -6,7 +6,7 @@ import time
 DEBUG_MODE = False
 DELAY = 1
 
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 coil_A_1_pin = 6 # pink
 coil_A_2_pin = 13 # orange
@@ -97,31 +97,27 @@ def get_jesse_travelling():
 def get_jesse_status():
     if DEBUG_MODE == True:
         return int(input())
-    if get_jesse_location() == "home" and get_jesse_travelling() == \
-            "arrived" or get_jesse_travelling() == "stationary":
+    if get_jesse_location() == "home":
         # return "Home"
         return 0
-    elif get_jesse_location() == "school" and get_jesse_travelling() == \
-            "arrived" or get_jesse_travelling() == "stationary":
+    elif get_jesse_location() == "school":
         # return "School"
         return 1
-    elif get_jesse_location() == "work" and get_jesse_travelling() == \
-            "arrived" or get_jesse_travelling() == "stationary":
+    elif get_jesse_location() == "work":
         # return "Work"
         return 2
     elif get_jesse_travelling() == "towards" or get_jesse_travelling() \
             == "away_from":
         # return "Travelling"
         return 3
-    # if get_jesse_location() == "not_home":
-    #    return "Lost"
-    #    return 4
-    elif get_jesse_location() == "hospital" and get_jesse_travelling() \
-            == "arrived" or get_jesse_travelling() == "stationary":
+    if get_jesse_location() == "away" and get_jesse_travelling() \
+            == "stationary":
+        # return "Lost"
+        return 4
+    elif get_jesse_location() == "hospital":
         # return "Hospital"
         return 5
-    elif get_jesse_location() == "prison" and get_jesse_travelling() \
-            == "arrived" or get_jesse_travelling() == "stationary":
+    elif get_jesse_location() == "prison":
         # return "Prison"
         return 6
     elif get_jesse_location() == "mortal peril":
