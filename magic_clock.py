@@ -4,7 +4,7 @@ import RPi.GPIO as GPIO
 import time
 
 DEBUG_MODE = True
-DELAY = 0.1
+DELAY = 0.01
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -56,14 +56,14 @@ def setStep(w1, w2, w3, w4):
     GPIO.output(coil_B_2_pin, w4)
 
 
-def forward(steps):
+def backwards(steps):
     for i in range(steps):
         for j in range(8):
             setStep(clockwise[j][0], clockwise[j][1], clockwise[j][2], clockwise[j][3])
             time.sleep(DELAY)
 
 
-def backwards(steps):
+def forward(steps):
     for i in range(steps):
         for j in range(8):
             setStep(counter_clockwise[j][0], counter_clockwise[j][1], counter_clockwise[j][2], counter_clockwise[j][3])
@@ -142,10 +142,10 @@ def __main__():
         while True:
             if DEBUG_MODE is True:
                 print("current position {}".format(clock.jesse_hand))
-                forward(16)
+                forward(64)
                 time.sleep(1)
                 print("current position {}".format(clock.jesse_hand))
-                backwards(8)
+                backwards(64)
                 time.sleep(1)
             else:
                 print("current position {}".format(clock.jesse_hand))
