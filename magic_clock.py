@@ -110,10 +110,10 @@ def get_jesse_status():
             "towards" or get_jesse_travelling() == "away_from":
         # return "Travelling"
         return 3
-    """elif get_jesse_location() == "away" and get_jesse_travelling() \
+    elif get_jesse_location() == "away" and get_jesse_travelling() \
             == "stationary":
-        # return "Lost"
-        return 4"""
+        # return "Somewhere Else"
+        return 4
     elif get_jesse_location() == "hospital":
         # return "Hospital"
         return 5
@@ -142,21 +142,12 @@ def __main__():
     clock = Clock()
     try:
         while True:
-            if DEBUG_MODE is True:
-                """print("current position {}".format(clock.jesse_hand))
-                forward(64)
-                time.sleep(1)
-                print("current position {}".format(clock.jesse_hand))
-                backwards(64)
-                time.sleep(1)"""
-                pass
-            else:
-                print("current position {}".format(clock.jesse_hand))
-                num_steps = update_clock_hand(clock)
-                if num_steps > 0:
-                    forward(num_steps * 8)
-                elif num_steps < 0:
-                    backwards(abs(num_steps * 8))
+            print("current position {}".format(clock.jesse_hand))
+            num_steps = update_clock_hand(clock)
+            if num_steps > 0:
+                forward(num_steps * 8)
+            elif num_steps < 0:
+                backwards(abs(num_steps * 8))
 
             time.sleep(1)
     except KeyboardInterrupt:
