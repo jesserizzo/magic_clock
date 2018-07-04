@@ -1,47 +1,22 @@
-
 import requests
 import json
 import RPi.GPIO as GPIO
 import time
 
-DEBUG_MODE = False
-DELAY = 0.01
-
-with open("config.txt", "r") as config:
-    #config_text = config.read()
-    config_json = json.loads(config.read())
-    PWD = config_json["password"]
+MOTOR_DELAY = 0.01
 TRACKERS = ["device_tracker.google_maps_115948204649955307306"]
 PROXIMITIES = ["proximity.home"]
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
 coil_A_1_pin = 6
 coil_A_2_pin = 13
 coil_B_1_pin = 19
 coil_B_2_pin = 26
 
+with open("config.txt", "r") as config:
+    config_json = json.loads(config.read())
+    PWD = config_json["password"]
 
-clockwise = [0, 1, 2, 3, 4, 5, 6, 7]
-clockwise[0] = [0, 0 ,0, 1]
-clockwise[1] = [0, 0, 1, 1]
-clockwise[2] = [0, 0, 1, 0]
-clockwise[3] = [0, 1, 1, 0]
-clockwise[4] = [0, 1, 0, 0]
-clockwise[5] = [1, 1, 0, 0]
-clockwise[6] = [1, 0, 0, 0]
-clockwise[7] = [1, 0, 0, 1]
-
-counter_clockwise = [0, 1, 2, 3, 4, 5, 6, 7]
-counter_clockwise[0] = [1, 0, 0, 0]
-counter_clockwise[1] = [1, 1, 0, 0]
-counter_clockwise[2] = [0, 1, 0, 0]
-counter_clockwise[3] = [0, 1, 1, 0]
-counter_clockwise[4] = [0, 0, 1, 0]
-counter_clockwise[5] = [0, 0, 1, 1]
-counter_clockwise[6] = [0, 0, 0, 1]
-counter_clockwise[7] = [1, 0, 0, 1]
-
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 GPIO.setup(coil_A_1_pin, GPIO.OUT)
 GPIO.setup(coil_A_2_pin, GPIO.OUT)
 GPIO.setup(coil_B_1_pin, GPIO.OUT)
@@ -62,17 +37,35 @@ def setStep(w1, w2, w3, w4):
 
 
 def backwards(steps):
+    backwards = [0, 1, 2, 3, 4, 5, 6, 7]
+    backwards[0] = [0, 0 ,0, 1]
+    backwards[1] = [0, 0, 1, 1]
+    backwards[2] = [0, 0, 1, 0]
+    backwards[3] = [0, 1, 1, 0]
+    backwards[4] = [0, 1, 0, 0]
+    backwards[5] = [1, 1, 0, 0]
+    backwards[6] = [1, 0, 0, 0]
+    backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(clockwise[j][0], clockwise[j][1], clockwise[j][2], clockwise[j][3])
-            time.sleep(DELAY)
+            setStep(backwards[j][0], backwards[j][1], backwards[j][2], backwards[j][3])
+            time.sleep(MOTOR_DELAY)
 
 
 def forward(steps):
+    forwards = [0, 1, 2, 3, 4, 5, 6, 7]
+    forwards[0] = [1, 0, 0, 0]
+    forwards[1] = [1, 1, 0, 0]
+    forwards[2] = [0, 1, 0, 0]
+    forwards[3] = [0, 1, 1, 0]
+    forwards[4] = [0, 0, 1, 0]
+    forwards[5] = [0, 0, 1, 1]
+    forwards[6] = [0, 0, 0, 1]
+    forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(counter_clockwise[j][0], counter_clockwise[j][1], counter_clockwise[j][2], counter_clockwise[j][3])
-            time.sleep(DELAY)
+            setStep(forwards[j][0], forwards[j][1], forwards[j][2], forwards[j][3])
+            time.sleep(MOTOR_DELAY)
 
 
 def get_location(tracker):
@@ -152,6 +145,7 @@ def __main__():
                 time.sleep(1)
     except KeyboardInterrupt:
         setStep(0, 0, 0, 0)
+        GPIO.cleanup()
         exit()
 
 if __name__ == "__main__":
