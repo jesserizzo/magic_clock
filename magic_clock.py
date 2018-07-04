@@ -3,21 +3,24 @@ import json
 import RPi.GPIO as GPIO
 import time
 
+# Reads config file for Home Assistant password, entity IDs
+# Home assistant URL, and interval in seconds between updates
+with open("config.txt", "r") as config:
+    config_json = json.loads(config.read())
+    PWD = config_json["password"]
+    TRACKERS = config_json["trackers"]
+    PROXIMITIES = config_json["proximities"]
+    URL = config_json["url"]
+    UPDATE_INTERVAL = config_json["update_interval"]
+
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
 MOTOR_DELAY = 0.01
-#Local IP address and port num of your Home Assistant server
-URL = "http://192.168.1.11:8123"
-# The entity id(s) of your device trackers in Home Assistant
-TRACKERS = ["device_tracker.google_maps_115948204649955307306",
-            "device_tracker.google_maps_103614229965349669808"]
-# The entity id(s) of your proximities in Home Assistant
-PROXIMITIES = ["proximity.jesse_home", "proximity.megan_home"]
 # A list of ints for the position of the clock hands, set to 0 at program start
 CLOCK_HANDS = []
 for i in range(len(TRACKERS)):
     CLOCK_HANDS.append(0)
-UPDATE_INTERVAL = 1
+
 # The pins on the Raspberry pi used to drive the motor controller(s)
 MOTOR_1_PHASE_A = 6
 MOTOR_1_PHASE_B = 13
@@ -28,11 +31,7 @@ MOTOR_2_PHASE_B = 16
 MOTOR_2_PHASE_C = 20
 MOTOR_2_PHASE_D = 21
 
-# Config file containing the password, simply so it isn't uploaded to
-# Github. You could just hardcode it if you aren't using Github
-with open("config.txt", "r") as config:
-    config_json = json.loads(config.read())
-    PWD = config_json["password"]
+
 
 # Set up the GPIO pins on the Raspberry Pi
 GPIO.setmode(GPIO.BCM)
@@ -59,7 +58,6 @@ def setStep(motor_num, w1, w2, w3, w4):
         GPIO.output(MOTOR_2_PHASE_B, w2)
         GPIO.output(MOTOR_2_PHASE_C, w3)
         GPIO.output(MOTOR_2_PHASE_D, w4)
-
 
 
 def backwards(steps, motor_num):
