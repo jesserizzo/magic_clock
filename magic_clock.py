@@ -6,8 +6,11 @@ import time
 
 DEBUG_MODE = False
 DELAY = 0.01
-CONFIG = open("config.txt", "r")
-PWD = CONFIG.readline()
+
+with open("config.txt", "r") as config:
+    #config_text = config.read()
+    config_json = json.loads(config.read())
+    PWD = config_json["password"]
 TRACKERS = ["device_tracker.google_maps_115948204649955307306"]
 PROXIMITIES = ["proximity.home"]
 
