@@ -1,3 +1,4 @@
+
 import requests
 import json
 import RPi.GPIO as GPIO
@@ -78,7 +79,7 @@ def get_location(tracker):
         response = requests.get(url, timeout=5)
         return (json.loads(response.text)["state"])
     except (requests.exceptions.RequestException, ValueError):
-        print("error getting location for {}".format(tracker))
+        print("error getting location for {0}".format(tracker))
         return
 
 
@@ -137,7 +138,7 @@ def __main__():
     clock = Clock()
     try:
         while True:
-            for i in len(TRACKERS):
+            for i in range(len(TRACKERS)):
                 new_position = get_status(TRACKERS[i], PROXIMITIES[i])
                 num_steps = update_clock_hand(clock, new_position)
                 if num_steps > 0:
