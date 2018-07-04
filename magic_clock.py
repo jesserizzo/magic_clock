@@ -1,17 +1,26 @@
 import requests
 import json
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import time
 
 # Reads config file for Home Assistant password, entity IDs
 # Home assistant URL, and interval in seconds between updates
-with open("config.txt", "r") as config:
-    config_json = json.loads(config.read())
-    PWD = config_json["password"]
-    TRACKERS = config_json["trackers"]
-    PROXIMITIES = config_json["proximities"]
-    URL = config_json["url"]
-    UPDATE_INTERVAL = config_json["update_interval"]
+try:
+    with open("config.txt", "r") as config:
+        config_json = json.loads(config.read())
+        PWD = config_json["password"]
+        TRACKERS = config_json["trackers"]
+        PROXIMITIES = config_json["proximities"]
+        URL = config_json["url"]
+        UPDATE_INTERVAL = config_json["update_interval"]
+except FileNotFoundError:
+    print ("config.txt file not found. See readme for instructions "\
+           "on setting up config.txt")
+    exit()
+except KeyError:
+    print ("Config.txt not set up correctly. See readme for instructions " \
+           "on setting up config.txt")
+    exit()
 
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
