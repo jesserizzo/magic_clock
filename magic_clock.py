@@ -15,8 +15,9 @@ TRACKERS = ["device_tracker.google_maps_115948204649955307306",
 PROXIMITIES = ["proximity.jesse_home", "proximity.megan_home"]
 # A list of ints for the position of the clock hands, set to 0 at program start
 CLOCK_HANDS = []
-for i in len(TRACKERS):
+for i in range(len(TRACKERS)):
     CLOCK_HANDS.append(0)
+UPDATE_INTERVAL = 1
 # The pins on the Raspberry pi used to drive the motor controller(s)
 MOTOR_1_PHASE_A = 6
 MOTOR_1_PHASE_B = 13
@@ -151,32 +152,31 @@ def get_status(tracker, proximity):
         return 4
 
 
-def update_clock_hand(hand_num, new_position):
+def move_clock_hand(hand_num, new_position):
     """Calculate how many steps to move the hand and store the
     new hand position"""
     steps = 0
     if new_position == CLOCK_HANDS[hand_num]:
         pass
     else:
-        steps = new_position - CLOCK_HANDS[hand_num]
-        CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + steps
-    return steps
+        num_steps = new_position - CLOCK_HANDS[hand_num]
+        CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + num_steps
+        if num_steps > 0:
+            forward(num_steps * 64, hand_num)
+        elif num_steps < 0:
+            backwards(abs(num_steps * 64), hand_num)
+
 
 def __main__():
     try:
         while True:
+            # Iterate through how ever many trackers you have set up
+            # Getting the new position and moving the clock hand for each
             for i in range(len(TRACKERS)):
                 new_position = get_status(TRACKERS[i], PROXIMITIES[i])
-                num_steps = update_clock_hand(i, new_position)
-                if num_steps > 0:
-                    forward(num_steps * 64, i)
-                elif num_steps < 0:
-                    backwards(abs(num_steps * 64), i)
-
-                time.sleep(1)
+                move_clock_hand(i, new_position)
+                time.sleep(UPDATE_INTERVAL)
     except KeyboardInterrupt:
-        setStep(0, 0, 0, 0, 0)
-        setStep(1, 0, 0, 0, 0)
         GPIO.cleanup()
         exit()
 
