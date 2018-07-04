@@ -6,10 +6,10 @@ import time
 MOTOR_DELAY = 0.01
 TRACKERS = ["device_tracker.google_maps_115948204649955307306"]
 PROXIMITIES = ["proximity.home"]
-coil_A_1_pin = 6
-coil_A_2_pin = 13
-coil_B_1_pin = 19
-coil_B_2_pin = 26
+MOTOR_1_PHASE_A = 6
+MOTOR_1_PHASE_B = 13
+MOTOR_1_PHASE_C = 19
+MOTOR_1_PHASE_D = 26
 
 with open("config.txt", "r") as config:
     config_json = json.loads(config.read())
@@ -17,10 +17,10 @@ with open("config.txt", "r") as config:
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup(coil_A_1_pin, GPIO.OUT)
-GPIO.setup(coil_A_2_pin, GPIO.OUT)
-GPIO.setup(coil_B_1_pin, GPIO.OUT)
-GPIO.setup(coil_B_2_pin, GPIO.OUT)
+GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
+GPIO.setup(MOTOR_1_PHASE_B, GPIO.OUT)
+GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
+GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
 
 
 class Clock():
@@ -30,15 +30,15 @@ class Clock():
 
 
 def setStep(w1, w2, w3, w4):
-    GPIO.output(coil_A_1_pin, w1)
-    GPIO.output(coil_A_2_pin, w2)
-    GPIO.output(coil_B_1_pin, w3)
-    GPIO.output(coil_B_2_pin, w4)
+    GPIO.output(MOTOR_1_PHASE_A, w1)
+    GPIO.output(MOTOR_1_PHASE_B, w2)
+    GPIO.output(MOTOR_1_PHASE_C, w3)
+    GPIO.output(MOTOR_1_PHASE_D, w4)
 
 
 def backwards(steps):
     backwards = [0, 1, 2, 3, 4, 5, 6, 7]
-    backwards[0] = [0, 0 ,0, 1]
+    backwards[0] = [0, 0, 0, 1]
     backwards[1] = [0, 0, 1, 1]
     backwards[2] = [0, 0, 1, 0]
     backwards[3] = [0, 1, 1, 0]
@@ -48,7 +48,8 @@ def backwards(steps):
     backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(backwards[j][0], backwards[j][1], backwards[j][2], backwards[j][3])
+            setStep(backwards[j][0], backwards[j][1], backwards[j][2],
+                    backwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
@@ -64,13 +65,15 @@ def forward(steps):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(forwards[j][0], forwards[j][1], forwards[j][2], forwards[j][3])
+            setStep(forwards[j][0], forwards[j][1], forwards[j][2],
+                    forwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
 def get_location(tracker):
     """Get  location from Home Assistant"""
-    url = "http://192.168.1.11:8123/api/states/{}?api_password={}".format(tracker, PWD)
+    url = "http://192.168.1.11:8123/api/states/{}?api_password={}"\
+        .format(tracker, PWD)
     try:
         response = requests.get(url, timeout=5)
         return (json.loads(response.text)["state"])
@@ -81,7 +84,8 @@ def get_location(tracker):
 
 def get_travelling(proximity):
     """Get travelling status from Home Assistant"""
-    url = "http://192.168.1.11:8123/api/states/{}?api_password={}".format(proximity, PWD)
+    url = "http://192.168.1.11:8123/api/states/{}?api_password={}"\
+        .format(proximity, PWD)
     try:
         response = requests.get(url, timeout=5)
         return (json.loads(response.text)["attributes"]["dir_of_travel"])
