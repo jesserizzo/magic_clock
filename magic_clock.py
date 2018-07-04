@@ -3,11 +3,21 @@ import json
 import RPi.GPIO as GPIO
 import time
 
+# Delay between each phase of the stepper motor, the lower this number
+# the faster the motor turns
 MOTOR_DELAY = 0.01
+#Local IP address and port num of your Home Assistant server
+URL = "http://192.168.1.11:8123"
+# The entity id(s) of your device trackers in Home Assistant
 TRACKERS = ["device_tracker.google_maps_115948204649955307306",
             "device_tracker.google_maps_103614229965349669808"]
+# The entity id(s) of your proximities in Home Assistant
 PROXIMITIES = ["proximity.jesse_home", "proximity.megan_home"]
-CLOCK_HANDS = [0, 0]
+# A list of ints for the position of the clock hands, set to 0 at program start
+CLOCK_HANDS = []
+for i in len(TRACKERS):
+    CLOCK_HANDS.append(0)
+# The pins on the Raspberry pi used to drive the motor controller(s)
 MOTOR_1_PHASE_A = 6
 MOTOR_1_PHASE_B = 13
 MOTOR_1_PHASE_C = 19
@@ -17,10 +27,13 @@ MOTOR_2_PHASE_B = 16
 MOTOR_2_PHASE_C = 20
 MOTOR_2_PHASE_D = 21
 
+# Config file containing the password, simply so it isn't uploaded to
+# Github. You could just hardcode it if you aren't using Github
 with open("config.txt", "r") as config:
     config_json = json.loads(config.read())
     PWD = config_json["password"]
 
+# Set up the GPIO pins on the Raspberry Pi
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
@@ -33,12 +46,7 @@ GPIO.setup(MOTOR_2_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_2_PHASE_D, GPIO.OUT)
 
 
-"""class Clock():
-    def __init__(self):
-        self.hand_1 = 0
-        self.hand_2 = 0"""
-
-
+# Function that actually makes the motor spin.
 def setStep(motor_num, w1, w2, w3, w4):
     if motor_num == 0:
         GPIO.output(MOTOR_1_PHASE_A, w1)
@@ -52,7 +60,10 @@ def setStep(motor_num, w1, w2, w3, w4):
         GPIO.output(MOTOR_2_PHASE_D, w4)
 
 
+
 def backwards(steps, motor_num):
+    """Look up documentation for your motor driver board to find what
+    pins to energize in what order. This is for the ULN2003"""
     backwards = [0, 1, 2, 3, 4, 5, 6, 7]
     backwards[0] = [0, 0, 0, 1]
     backwards[1] = [0, 0, 1, 1]
@@ -70,6 +81,8 @@ def backwards(steps, motor_num):
 
 
 def forward(steps, motor_num):
+    """Look up documentation for your motor driver board to find what
+    pins to energize in what order. This is for the ULN2003"""
     forwards = [0, 1, 2, 3, 4, 5, 6, 7]
     forwards[0] = [1, 0, 0, 0]
     forwards[1] = [1, 1, 0, 0]
@@ -88,8 +101,7 @@ def forward(steps, motor_num):
 
 def get_location(tracker):
     """Get  location from Home Assistant"""
-    url = "http://192.168.1.11:8123/api/states/{}?api_password={}"\
-        .format(tracker, PWD)
+    url = "{}/api/states/{}?api_password={}".format(URL, tracker, PWD)
     try:
         response = requests.get(url, timeout=5)
         return (json.loads(response.text)["state"])
@@ -99,9 +111,8 @@ def get_location(tracker):
 
 
 def get_travelling(proximity):
-    """Get travelling status from Home Assistant"""
-    url = "http://192.168.1.11:8123/api/states/{}?api_password={}"\
-        .format(proximity, PWD)
+    """Get proximity status from Home Assistant"""
+    url = "{}/api/states/{}?api_password={}".format(URL, proximity, PWD)
     try:
         response = requests.get(url, timeout=5)
         return (json.loads(response.text)["attributes"]["dir_of_travel"])
@@ -111,6 +122,8 @@ def get_travelling(proximity):
 
 
 def get_status(tracker, proximity):
+    """Gets the location and proximity states from Home Assistant and
+    returns an int corresponding to location on the clock face"""
     if get_location(tracker) == "home":
         # return "Home"
         return 0
@@ -138,37 +151,23 @@ def get_status(tracker, proximity):
         return 4
 
 
-def update_clock_hand(clock, hand_num, new_position):
-    clock = clock
+def update_clock_hand(hand_num, new_position):
+    """Calculate how many steps to move the hand and store the
+    new hand position"""
     steps = 0
     if new_position == CLOCK_HANDS[hand_num]:
         pass
     else:
         steps = new_position - CLOCK_HANDS[hand_num]
         CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + steps
-"""    if hand_num == 0:
-        if new_position == clock.hand_1:
-            pass
-        else:
-            steps = new_position - clock.hand_1
-            clock.hand_1 = clock.hand_1 + steps
-        return steps
-    elif hand_num == 1:
-        if new_position == clock.hand_2:
-            pass
-        else:
-            steps = new_position - clock.hand_2
-            clock.hand_2 = clock.hand_2 + steps
-        return steps"""
     return steps
 
 def __main__():
-    clock = Clock()
     try:
         while True:
             for i in range(len(TRACKERS)):
                 new_position = get_status(TRACKERS[i], PROXIMITIES[i])
-                num_steps = update_clock_hand(clock, i, new_position)
+                num_steps = update_clock_hand(i, new_position)
                 if num_steps > 0:
                     forward(num_steps * 64, i)
                 elif num_steps < 0:
