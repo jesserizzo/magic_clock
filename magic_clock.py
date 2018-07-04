@@ -4,8 +4,10 @@ import RPi.GPIO as GPIO
 import time
 
 MOTOR_DELAY = 0.01
-TRACKERS = ["device_tracker.google_maps_115948204649955307306", "device_tracker.google_maps_103614229965349669808"]
+TRACKERS = ["device_tracker.google_maps_115948204649955307306",
+            "device_tracker.google_maps_103614229965349669808"]
 PROXIMITIES = ["proximity.jesse_home", "proximity.megan_home"]
+CLOCK_HANDS = [0, 0]
 MOTOR_1_PHASE_A = 6
 MOTOR_1_PHASE_B = 13
 MOTOR_1_PHASE_C = 19
@@ -31,10 +33,10 @@ GPIO.setup(MOTOR_2_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_2_PHASE_D, GPIO.OUT)
 
 
-class Clock():
+"""class Clock():
     def __init__(self):
         self.hand_1 = 0
-        self.hand_2 = 0
+        self.hand_2 = 0"""
 
 
 def setStep(motor_num, w1, w2, w3, w4):
@@ -62,8 +64,8 @@ def backwards(steps, motor_num):
     backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(motor_num, backwards[j][0], backwards[j][1], backwards[j][2],
-                    backwards[j][3])
+            setStep(motor_num, backwards[j][0], backwards[j][1],
+                    backwards[j][2], backwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
@@ -139,7 +141,12 @@ def get_status(tracker, proximity):
 def update_clock_hand(clock, hand_num, new_position):
     clock = clock
     steps = 0
-    if hand_num == 0:
+    if new_position == CLOCK_HANDS[hand_num]:
+        pass
+    else:
+        steps = new_position - CLOCK_HANDS[hand_num]
+        CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + steps
+"""    if hand_num == 0:
         if new_position == clock.hand_1:
             pass
         else:
@@ -152,7 +159,8 @@ def update_clock_hand(clock, hand_num, new_position):
         else:
             steps = new_position - clock.hand_2
             clock.hand_2 = clock.hand_2 + steps
-        return steps
+        return steps"""
+    return steps
 
 def __main__():
     clock = Clock()
@@ -168,7 +176,8 @@ def __main__():
 
                 time.sleep(1)
     except KeyboardInterrupt:
-        setStep(0, 0, 0, 0)
+        setStep(0, 0, 0, 0, 0)
+        setStep(1, 0, 0, 0, 0)
         GPIO.cleanup()
         exit()
 
