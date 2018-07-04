@@ -4,12 +4,16 @@ import RPi.GPIO as GPIO
 import time
 
 MOTOR_DELAY = 0.01
-TRACKERS = ["device_tracker.google_maps_115948204649955307306"]
-PROXIMITIES = ["proximity.home"]
+TRACKERS = ["device_tracker.google_maps_115948204649955307306", "device_tracker.google_maps_103614229965349669808"]
+PROXIMITIES = ["proximity.jesse_home", "proximity.megan_home"]
 MOTOR_1_PHASE_A = 6
 MOTOR_1_PHASE_B = 13
 MOTOR_1_PHASE_C = 19
 MOTOR_1_PHASE_D = 26
+MOTOR_2_PHASE_A = 12
+MOTOR_2_PHASE_B = 16
+MOTOR_2_PHASE_C = 20
+MOTOR_2_PHASE_D = 21
 
 with open("config.txt", "r") as config:
     config_json = json.loads(config.read())
@@ -21,6 +25,10 @@ GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_B, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
+GPIO.setup(MOTOR_2_PHASE_A, GPIO.OUT)
+GPIO.setup(MOTOR_2_PHASE_B, GPIO.OUT)
+GPIO.setup(MOTOR_2_PHASE_C, GPIO.OUT)
+GPIO.setup(MOTOR_2_PHASE_D, GPIO.OUT)
 
 
 class Clock():
@@ -29,14 +37,20 @@ class Clock():
         self.hand_2 = 0
 
 
-def setStep(w1, w2, w3, w4):
-    GPIO.output(MOTOR_1_PHASE_A, w1)
-    GPIO.output(MOTOR_1_PHASE_B, w2)
-    GPIO.output(MOTOR_1_PHASE_C, w3)
-    GPIO.output(MOTOR_1_PHASE_D, w4)
+def setStep(motor_num, w1, w2, w3, w4):
+    if motor_num == 0:
+        GPIO.output(MOTOR_1_PHASE_A, w1)
+        GPIO.output(MOTOR_1_PHASE_B, w2)
+        GPIO.output(MOTOR_1_PHASE_C, w3)
+        GPIO.output(MOTOR_1_PHASE_D, w4)
+    if motor_num == 1:
+        GPIO.output(MOTOR_2_PHASE_A, w1)
+        GPIO.output(MOTOR_2_PHASE_B, w2)
+        GPIO.output(MOTOR_2_PHASE_C, w3)
+        GPIO.output(MOTOR_2_PHASE_D, w4)
 
 
-def backwards(steps):
+def backwards(steps, motor_num):
     backwards = [0, 1, 2, 3, 4, 5, 6, 7]
     backwards[0] = [0, 0, 0, 1]
     backwards[1] = [0, 0, 1, 1]
@@ -48,12 +62,12 @@ def backwards(steps):
     backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(backwards[j][0], backwards[j][1], backwards[j][2],
+            setStep(motor_num, backwards[j][0], backwards[j][1], backwards[j][2],
                     backwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
-def forward(steps):
+def forward(steps, motor_num):
     forwards = [0, 1, 2, 3, 4, 5, 6, 7]
     forwards[0] = [1, 0, 0, 0]
     forwards[1] = [1, 1, 0, 0]
@@ -65,7 +79,7 @@ def forward(steps):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(forwards[j][0], forwards[j][1], forwards[j][2],
+            setStep(motor_num, forwards[j][0], forwards[j][1], forwards[j][2],
                     forwards[j][3])
             time.sleep(MOTOR_DELAY)
 
@@ -122,17 +136,23 @@ def get_status(tracker, proximity):
         return 4
 
 
-def update_clock_hand(clock, new_position):
+def update_clock_hand(clock, hand_num, new_position):
     clock = clock
     steps = 0
-
-    if new_position == clock.hand_1:
-        pass
-    else:
-        steps = new_position - clock.hand_1
-        clock.hand_1 = clock.hand_1 + steps
-    return steps
-
+    if hand_num == 0:
+        if new_position == clock.hand_1:
+            pass
+        else:
+            steps = new_position - clock.hand_1
+            clock.hand_1 = clock.hand_1 + steps
+        return steps
+    elif hand_num == 1:
+        if new_position == clock.hand_2:
+            pass
+        else:
+            steps = new_position - clock.hand_2
+            clock.hand_2 = clock.hand_2 + steps
+        return steps
 
 def __main__():
     clock = Clock()
@@ -140,11 +160,11 @@ def __main__():
         while True:
             for i in range(len(TRACKERS)):
                 new_position = get_status(TRACKERS[i], PROXIMITIES[i])
-                num_steps = update_clock_hand(clock, new_position)
+                num_steps = update_clock_hand(clock, i, new_position)
                 if num_steps > 0:
-                    forward(num_steps * 64)
+                    forward(num_steps * 64, i)
                 elif num_steps < 0:
-                    backwards(abs(num_steps * 64))
+                    backwards(abs(num_steps * 64), i)
 
                 time.sleep(1)
     except KeyboardInterrupt:
