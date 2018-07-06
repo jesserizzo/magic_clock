@@ -3,37 +3,6 @@ import json
 import RPi.GPIO as GPIO
 import time
 
-# Reads config file for Home Assistant password, entity IDs
-# Home assistant URL, and interval in seconds between updates
-try:
-    with open("config.json", "r") as config:
-        config_json = json.loads(config.read())
-        PWD = config_json["password"]
-        TRACKERS = config_json["trackers"]
-        PROXIMITIES = config_json["proximities"]
-        URL = config_json["url"]
-        UPDATE_INTERVAL = config_json["update_interval"]
-except FileNotFoundError:
-    print ("config.txt file not found. See readme for instructions "
-           "on setting up config.txt")
-    exit()
-except KeyError:
-    print ("Config.txt not set up correctly. See readme for instructions "
-           "on setting up config.txt")
-    exit()
-
-# Try reading clock hands position from the config file, if it is not found
-# then set them all to 0
-with open("config.json", "r+") as config:
-    config_json = json.loads(config.read())
-    try:
-        CLOCK_HANDS = config_json["clock_hands"]
-    except KeyError:
-        CLOCK_HANDS = []
-        for i in range(len(TRACKERS)):
-            CLOCK_HANDS.append(0)
-            write_hand_position_to_file(i, 0)
-
 
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
@@ -191,6 +160,39 @@ def write_hand_position_to_file(hand_num, hand_position):
         config_json["clock_hands"][hand_num] = new_position
         config.seek(0)
         json.dump(config_json, config, indent=1)
+
+
+# Reads config file for Home Assistant password, entity IDs
+# Home assistant URL, and interval in seconds between updates
+try:
+    with open("config.json", "r") as config:
+        config_json = json.loads(config.read())
+        PWD = config_json["password"]
+        TRACKERS = config_json["trackers"]
+        PROXIMITIES = config_json["proximities"]
+        URL = config_json["url"]
+        UPDATE_INTERVAL = config_json["update_interval"]
+except FileNotFoundError:
+    print ("config.txt file not found. See readme for instructions "
+           "on setting up config.txt")
+    exit()
+except KeyError:
+    print ("Config.txt not set up correctly. See readme for instructions "
+           "on setting up config.txt")
+    exit()
+
+
+# Try reading clock hands position from the config file, if it is not found
+# then set them all to 0
+with open("config.json", "r+") as config:
+    config_json = json.loads(config.read())
+    try:
+        CLOCK_HANDS = config_json["clock_hands"]
+    except KeyError:
+        CLOCK_HANDS = []
+        for i in range(len(TRACKERS)):
+            CLOCK_HANDS.append(0)
+            write_hand_position_to_file(i, 0)
 
 
 def __main__():
