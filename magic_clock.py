@@ -1,12 +1,12 @@
 import requests
 import json
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 
 # Reads config file for Home Assistant password, entity IDs
 # Home assistant URL, and interval in seconds between updates
 try:
-    with open("config.txt", "r") as config:
+    with open("config.json", "r") as config:
         config_json = json.loads(config.read())
         PWD = config_json["password"]
         TRACKERS = config_json["trackers"]
@@ -22,13 +22,20 @@ except KeyError:
            "on setting up config.txt")
     exit()
 
+# Try reading clock hands position from the config file, if it is not found
+# then set them all to 0
+try:
+    with open("config.json", "r") as config:
+        config_json = json.loads(config.read())
+        CLOCK_HANDS = config_json["clock_hands"]
+except KeyError:
+    CLOCK_HANDS = []
+    for i in range(len(TRACKERS)):
+        CLOCK_HANDS.append(0)
+
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
 MOTOR_DELAY = 0.01
-# A list of ints for the position of the clock hands, set to 0 at program start
-CLOCK_HANDS = []
-for i in range(len(TRACKERS)):
-    CLOCK_HANDS.append(0)
 
 # The pins on the Raspberry pi used to drive the motor controller(s)
 MOTOR_1_PHASE_A = 6
@@ -172,6 +179,13 @@ def move_clock_hand(hand_num, new_position):
             forward(num_steps * 64, hand_num)
         elif num_steps < 0:
             backwards(abs(num_steps * 64), hand_num)
+
+        # write the new hand position in the config file
+        with open("config.json", "r+") as config:
+            config.truncate(0)
+            config_json["magic_hands"][hand_num] = new_position
+            config.seek(0)
+            json.dump(config_json, config, indent = 1)
 
 
 def __main__():
