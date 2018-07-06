@@ -14,11 +14,11 @@ try:
         URL = config_json["url"]
         UPDATE_INTERVAL = config_json["update_interval"]
 except FileNotFoundError:
-    print ("config.txt file not found. See readme for instructions "\
+    print ("config.txt file not found. See readme for instructions "
            "on setting up config.txt")
     exit()
 except KeyError:
-    print ("Config.txt not set up correctly. See readme for instructions " \
+    print ("Config.txt not set up correctly. See readme for instructions "
            "on setting up config.txt")
     exit()
 
@@ -48,7 +48,6 @@ MOTOR_2_PHASE_A = 12
 MOTOR_2_PHASE_B = 16
 MOTOR_2_PHASE_C = 20
 MOTOR_2_PHASE_D = 21
-
 
 
 # Set up the GPIO pins on the Raspberry Pi
@@ -180,16 +179,18 @@ def move_clock_hand(hand_num, new_position):
         if num_steps > 0:
             forward(num_steps * 64, hand_num)
         elif num_steps < 0:
-            backwards(abs(num_steps * 64), hand_num)\
+            backwards(abs(num_steps * 64), hand_num)
         write_hand_position_to_file(hand_num, new_position)
 
 
 def write_hand_position_to_file(hand_num, hand_position):
+    """Write new postion of the clock hand to config file, so we know
+       where it is on next program start"""
     with open("config.json", "r+") as config:
         config.truncate(0)
-        config_json["magic_hands"][hand_num] = new_position
+        config_json["clock_hands"][hand_num] = new_position
         config.seek(0)
-        json.dump(config_json, config, indent = 1)
+        json.dump(config_json, config, indent=1)
 
 
 def __main__():
