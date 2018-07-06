@@ -24,14 +24,18 @@ except KeyError:
 
 # Try reading clock hands position from the config file, if it is not found
 # then set them all to 0
-try:
-    with open("config.json", "r") as config:
-        config_json = json.loads(config.read())
+with open("config.json", "r") as config:
+    config_json = json.loads(config.read())
+    try:
         CLOCK_HANDS = config_json["clock_hands"]
-except KeyError:
-    CLOCK_HANDS = []
-    for i in range(len(TRACKERS)):
-        CLOCK_HANDS.append(0)
+    except KeyError:
+        CLOCK_HANDS = []
+        for i in range(len(TRACKERS)):
+            CLOCK_HANDS.append(0)
+        config.truncate(0)
+        config_json["magic_hands"] = CLOCK_HANDS
+        config.seek(0)
+        json.dump(config_json, config, indent = 1)
 
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
@@ -182,6 +186,7 @@ def move_clock_hand(hand_num, new_position):
 
         # write the new hand position in the config file
         with open("config.json", "r+") as config:
+
             config.truncate(0)
             config_json["magic_hands"][hand_num] = new_position
             config.seek(0)
