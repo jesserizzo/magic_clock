@@ -109,31 +109,29 @@ def get_travelling(proximity):
 def get_status(tracker, proximity):
     """Gets the location and proximity states from Home Assistant and
     returns an int corresponding to location on the clock face"""
-    if get_location(tracker) == "home":
-        # return "Home"
+    if get_location(tracker) == "mortal peril":
         return 0
-    elif get_location(tracker) == "school":
-        # return "School"
+    elif get_location(tracker) == "friends":
         return 1
-    elif get_location(tracker) == "work":
-        # return "Work"
+    elif get_location(tracker) == "family":
         return 2
+    elif get_location(tracker) == "work":
+        return 3
+    elif get_location(tracker) == "home":
+        return 4
     elif get_location(tracker) == "not_home" and get_travelling(proximity) \
             == "towards" or get_travelling(proximity) == "away_from":
-        # return "Travelling"
-        return 3
-    elif get_location(tracker) == "hospital":
-        # return "Hospital"
+        # Point clock hand to traveling
         return 5
-    elif get_location(tracker) == "prison":
-        # return "Prison"
+    elif get_location(tracker) == "school":
         return 6
-    elif get_location(tracker) == "mortal peril":
-        # return "Moral Peril"
+    elif get_location(tracker) == "hospital":
         return 7
+    elif get_location(tracker) == "prison":
+        return 9
     else:
-        # return "Somewhere Else"
-        return 4
+        # Point clock hand to "elsewhere".
+        return 8
 
 
 def move_clock_hand(hand_num, new_position):
@@ -146,9 +144,9 @@ def move_clock_hand(hand_num, new_position):
         num_steps = new_position - CLOCK_HANDS[hand_num]
         CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + num_steps
         if num_steps > 0:
-            forward(num_steps * 64, hand_num)
+            forward(num_steps * 51, hand_num)
         elif num_steps < 0:
-            backwards(abs(num_steps * 64), hand_num)
+            backwards(abs(num_steps * 51), hand_num)
         write_hand_position_to_file(hand_num, new_position)
 
 
