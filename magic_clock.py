@@ -152,14 +152,20 @@ def move_clock_hand(hand_num, new_position):
         write_hand_position_to_file(hand_num, new_position)
 
 
-def write_hand_position_to_file(hand_num, hand_position):
+def write_hand_position_to_file(hand_position, hand_num):
     """Write new postion of the clock hand to config file, so we know
        where it is on next program start"""
     with open("config.json", "r+") as config:
-        config.truncate(0)
-        config_json["clock_hands"][hand_num] = new_position
-        config.seek(0)
-        json.dump(config_json, config, indent=1)
+        if hand_num is None:
+            config.truncate(0)
+            config_json["clock_hands"] = hand_position
+            config.seek(0)
+            json.dump(config_json, config, indent=1)
+        else:
+            config.truncate(0)
+            config_json["clock_hands"][hand_num] = hand_position
+            config.seek(0)
+            json.dump(config_json, config, indent=1)
 
 
 # Reads config file for Home Assistant password, entity IDs
@@ -192,7 +198,7 @@ with open("config.json", "r+") as config:
         CLOCK_HANDS = []
         for i in range(len(TRACKERS)):
             CLOCK_HANDS.append(0)
-            write_hand_position_to_file(i, 0)
+        write_hand_position_to_file(CLOCK_HANDS, None)
 
 
 def __main__():
