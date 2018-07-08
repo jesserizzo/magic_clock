@@ -147,7 +147,7 @@ def move_clock_hand(hand_num, new_position):
             forward(num_steps * 51, hand_num)
         elif num_steps < 0:
             backwards(abs(num_steps * 51), hand_num)
-        write_hand_position_to_file(hand_num, new_position)
+        write_hand_position_to_file(new_position, hand_num)
 
 
 def write_hand_position_to_file(hand_position, hand_num):
