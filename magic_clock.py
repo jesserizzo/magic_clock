@@ -3,37 +3,19 @@ import json
 import RPi.GPIO as GPIO
 import time
 
-# Delay between each phase of the stepper motor, the lower this number
-# the faster the motor turns
-MOTOR_DELAY = 0.01
+
 CONFIG_DICT = {}
-# The pins on the Raspberry pi used to drive the motor controller(s)
-MOTOR_0_PHASE_A = 6
-MOTOR_0_PHASE_B = 13
-MOTOR_0_PHASE_C = 19
-MOTOR_0_PHASE_D = 26
-MOTOR_1_PHASE_A = 12
-MOTOR_1_PHASE_B = 16
-MOTOR_1_PHASE_C = 20
-MOTOR_1_PHASE_D = 21
 
-
-# Set up the GPIO pins on the Raspberry Pi to outputs
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(MOTOR_0_PHASE_A, GPIO.OUT)
-GPIO.setup(MOTOR_0_PHASE_B, GPIO.OUT)
-GPIO.setup(MOTOR_0_PHASE_C, GPIO.OUT)
-GPIO.setup(MOTOR_0_PHASE_D, GPIO.OUT)
-GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
-GPIO.setup(MOTOR_1_PHASE_B, GPIO.OUT)
-GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
-GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
+def setup_GPIO():
+    """Set up the GPIO pins on the Raspberry Pi to outputs"""
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    for pin in CONFIG_DICT["motor_pins"]:
+        GPIO.setup(pin, GPIO.OUT)
 
 
 def read_config_file():
-    # Reads config file for Home Assistant password, entity IDs
-    # and Home Assistant url
+    """Reads config.json file for some constants"""
     try:
         with open("config.json", "r") as config:
             config_json = json.loads(config.read())
@@ -41,6 +23,8 @@ def read_config_file():
             CONFIG_DICT["trackers"] = config_json["trackers"]
             CONFIG_DICT["proximities"] = config_json["proximities"]
             CONFIG_DICT["url"] = config_json["url"]
+            CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
+            CONFIG_DICT["motor_delay"] = config_json["motor_delay"]
     except FileNotFoundError:
         print ("config.txt file not found. See readme for instructions "
                "on setting up config.txt")
@@ -59,7 +43,7 @@ def read_config_file():
     except KeyError:
         CONFIG_DICT["update_interval"] = 60
 
-    # Try reading clock hands position from the config file, if it is not found
+    # Reads clock hands position from the config file, if not found
     # then set them all to 0
     with open("config.json", "r+") as config:
         config_json = json.loads(config.read())
@@ -72,18 +56,16 @@ def read_config_file():
             write_hand_position_to_file(CONFIG_DICT["clock_hands"], None)
 
 
-def set_step(motor_num, w1, w2, w3, w4):
-    """Set to high the specified pins to switch each step of the motor"""
-    if motor_num == 0:
-        GPIO.output(MOTOR_0_PHASE_A, w1)
-        GPIO.output(MOTOR_0_PHASE_B, w2)
-        GPIO.output(MOTOR_0_PHASE_C, w3)
-        GPIO.output(MOTOR_0_PHASE_D, w4)
-    if motor_num == 1:
-        GPIO.output(MOTOR_1_PHASE_A, w1)
-        GPIO.output(MOTOR_1_PHASE_B, w2)
-        GPIO.output(MOTOR_1_PHASE_C, w3)
-        GPIO.output(MOTOR_1_PHASE_D, w4)
+def set_step(motor_num, pins_high_or_low_list):
+    """Set to high the specified pins to switch each step of the motor,
+    see the arrays in backwards and forwards functions. The range in the
+    for loop gets the 4 motor pins in the CONFIG_DICT for the specified
+    motor. For example motor 0 gets CONFIG_DICT['motor_pins'][0-3]
+    and motor 3 gets CONFIG_DICT['motor_pins'][12-15] etc."""
+    for pin_num, i in zip(range(motor_num*4, motor_num*4+4),
+                          pins_high_or_low_list):
+        GPIO.output(CONFIG_DICT["motor_pins"][pin_num],
+                    pins_high_or_low_list[i])
 
 
 def backwards(steps, motor_num):
@@ -100,9 +82,8 @@ def backwards(steps, motor_num):
     backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            set_step(motor_num, backwards[j][0], backwards[j][1],
-                     backwards[j][2], backwards[j][3])
-            time.sleep(MOTOR_DELAY)
+            set_step(motor_num, backwards[j])
+            time.sleep(CONFIG_DICT["motor_delay"])
 
 
 def forward(steps, motor_num):
@@ -119,9 +100,8 @@ def forward(steps, motor_num):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            set_step(motor_num, forwards[j][0], forwards[j][1],
-                     forwards[j][2], forwards[j][3])
-            time.sleep(MOTOR_DELAY)
+            set_step(motor_num, forwards[j][0])
+            time.sleep(CONFIG_DICT["motor_delay"])
 
 
 def get_location(tracker):
@@ -220,6 +200,7 @@ def write_hand_position_to_file(hand_position, hand_num):
 def __main__():
     try:
         while True:
+            setup_GPIO()
             read_config_file()
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
