@@ -6,7 +6,7 @@ import time
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
 MOTOR_DELAY = 0.01
-
+CONFIG_DICT = {}
 # The pins on the Raspberry pi used to drive the motor controller(s)
 MOTOR_0_PHASE_A = 6
 MOTOR_0_PHASE_B = 13
@@ -29,6 +29,47 @@ GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_B, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
+
+
+def read_config_file():
+    # Reads config file for Home Assistant password, entity IDs
+    # and Home Assistant url
+    try:
+        with open("config.json", "r") as config:
+            config_json = json.loads(config.read())
+            CONFIG_DICT["password"] = config_json["password"]
+            CONFIG_DICT["trackers"] = config_json["trackers"]
+            CONFIG_DICT["proximities"] = config_json["proximities"]
+            CONFIG_DICT["url"] = config_json["url"]
+    except FileNotFoundError:
+        print ("config.txt file not found. See readme for instructions "
+               "on setting up config.txt")
+        exit()
+    except KeyError:
+        print ("Config.txt not set up correctly. See readme for instructions "
+               "on setting up config.txt")
+        exit()
+
+    # Reads update interval from config.json, if not found defaults
+    # to 60 seconds
+    try:
+        with open("config.json", "r") as config:
+            config_json = json.loads(config.read())
+            CONFIG_DICT["update_interval"] = config_json["update_interval"]
+    except KeyError:
+        CONFIG_DICT["update_interval"] = 60
+
+    # Try reading clock hands position from the config file, if it is not found
+    # then set them all to 0
+    with open("config.json", "r+") as config:
+        config_json = json.loads(config.read())
+        try:
+            CONFIG_DICT["clock_hands"] = config_json["clock_hands"]
+        except KeyError:
+            CONFIG_DICT["clock_hands"] = []
+            for i in range(len(CONFIG_DICT["trackers"])):
+                CONFIG_DICT["clock_hands"].append(0)
+            write_hand_position_to_file(CONFIG_DICT["clock_hands"], None)
 
 
 def set_step(motor_num, w1, w2, w3, w4):
@@ -85,8 +126,8 @@ def forward(steps, motor_num):
 
 def get_location(tracker):
     """Get  location from the Home Assistant Api"""
-    url = "{}/api/states/{}".format(URL, tracker)
-    headers = {'x-ha-access': PWD,
+    url = "{}/api/states/{}".format(CONFIG_DICT["url"], tracker)
+    headers = {'x-ha-access': CONFIG_DICT["password"],
                'content-type': 'application/json'}
     try:
         response = requests.get(url, headers=headers, timeout=5)
@@ -98,8 +139,8 @@ def get_location(tracker):
 
 def get_travelling(proximity):
     """Get proximity status from the Home Assistant Api"""
-    url = "{}/api/states/{}".format(URL, proximity)
-    headers = {'x-ha-access': PWD,
+    url = "{}/api/states/{}".format(CONFIG_DICT["url"], proximity)
+    headers = {'x-ha-access': CONFIG_DICT["password"],
                'content-type': 'application/json'}
     try:
         response = requests.get(url, headers=headers, timeout=5)
@@ -139,11 +180,12 @@ def move_clock_hand(hand_num, new_position):
     """Calculate how many steps to move the hand, move it,
     and store the new hand position to file"""
     steps = 0
-    if new_position == CLOCK_HANDS[hand_num]:
+    if new_position == CONFIG_DICT["clock_hands"][hand_num]:
         pass
     else:
-        num_steps = new_position - CLOCK_HANDS[hand_num]
-        CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + num_steps
+        num_steps = new_position - CONFIG_DICT["clock_hands"][hand_num]
+        CONFIG_DICT["clock_hands"][hand_num] =\
+            CONFIG_DICT["clock_hands"][hand_num] + num_steps
         # It's num_steps * 51 because the motor has 512 steps in a full
         # revolution, and I've got 10 locations on my clock face
         if num_steps > 0:
@@ -160,67 +202,33 @@ def write_hand_position_to_file(hand_position, hand_num):
     """Write new postion of the clock hand to config file, so we know
        where it is on next program start"""
     with open("config.json", "r+") as config:
+        config_json = json.loads(config.read())
         if hand_num is None:
+            CONFIG_DICT["clock_hands"] = hand_position
             config.truncate(0)
             config_json["clock_hands"] = hand_position
             config.seek(0)
             json.dump(config_json, config, indent=1)
         else:
+            CONFIG_DICT["clock_hands"][hand_num] = hand_position
             config.truncate(0)
             config_json["clock_hands"][hand_num] = hand_position
             config.seek(0)
             json.dump(config_json, config, indent=1)
 
 
-# Reads config file for Home Assistant password, entity IDs
-# and Home Assistant URL
-try:
-    with open("config.json", "r") as config:
-        config_json = json.loads(config.read())
-        PWD = config_json["password"]
-        TRACKERS = config_json["trackers"]
-        PROXIMITIES = config_json["proximities"]
-        URL = config_json["url"]
-except FileNotFoundError:
-    print ("config.txt file not found. See readme for instructions "
-           "on setting up config.txt")
-    exit()
-except KeyError:
-    print ("Config.txt not set up correctly. See readme for instructions "
-           "on setting up config.txt")
-    exit()
-
-# Reads update interval from config.json, if not found defaults to 60 seconds
-try:
-    with open("config.json", "r") as config:
-        config_json = json.loads(config.read())
-        UPDATE_INTERVAL = config_json["update_interval"]
-except KeyError:
-    UPDATE_INTERVAL = 60
-
-
-# Try reading clock hands position from the config file, if it is not found
-# then set them all to 0
-with open("config.json", "r+") as config:
-    config_json = json.loads(config.read())
-    try:
-        CLOCK_HANDS = config_json["clock_hands"]
-    except KeyError:
-        CLOCK_HANDS = []
-        for i in range(len(TRACKERS)):
-            CLOCK_HANDS.append(0)
-        write_hand_position_to_file(CLOCK_HANDS, None)
-
-
 def __main__():
     try:
         while True:
+            read_config_file()
+            print(CONFIG_DICT)
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
-            for i in range(len(TRACKERS)):
-                new_position = get_status(TRACKERS[i], PROXIMITIES[i])
+            for i in range(len(CONFIG_DICT["trackers"])):
+                new_position = get_status(CONFIG_DICT["trackers"][i],
+                                          CONFIG_DICT["proximities"][i])
                 move_clock_hand(i, new_position)
-                time.sleep(UPDATE_INTERVAL)
+                time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
         GPIO.cleanup()
         exit()
