@@ -16,7 +16,7 @@ $ ./install_requirements.sh
 
 To run the program:
 
-`$ python3 magic_clock.py`
+`$ nohup python3 magic_clock.py`
 
 
 ### Hardware setup
