@@ -3,7 +3,6 @@ import json
 import RPi.GPIO as GPIO
 import time
 
-
 # Delay between each phase of the stepper motor, the lower this number
 # the faster the motor turns
 MOTOR_DELAY = 0.01
@@ -79,8 +78,8 @@ def forward(steps, motor_num):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            set_step(motor_num, forwards[j][0], forwards[j][1], forwards[j][2],
-                     forwards[j][3])
+            set_step(motor_num, forwards[j][0], forwards[j][1],
+                     forwards[j][2], forwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
@@ -174,7 +173,7 @@ def write_hand_position_to_file(hand_position, hand_num):
 
 
 # Reads config file for Home Assistant password, entity IDs
-# Home assistant URL, and interval in seconds between updates
+# and Home Assistant URL
 try:
     with open("config.json", "r") as config:
         config_json = json.loads(config.read())
@@ -182,7 +181,6 @@ try:
         TRACKERS = config_json["trackers"]
         PROXIMITIES = config_json["proximities"]
         URL = config_json["url"]
-        UPDATE_INTERVAL = config_json["update_interval"]
 except FileNotFoundError:
     print ("config.txt file not found. See readme for instructions "
            "on setting up config.txt")
@@ -191,6 +189,14 @@ except KeyError:
     print ("Config.txt not set up correctly. See readme for instructions "
            "on setting up config.txt")
     exit()
+
+# Reads update interval from config.json, if not found defaults to 60 seconds
+try:
+    with open("config.json", "r") as config:
+        config_json = json.loads(config.read())
+        UPDATE_INTERVAL = config_json["update_interval"]
+except KeyError:
+    UPDATE_INTERVAL = 60
 
 
 # Try reading clock hands position from the config file, if it is not found
