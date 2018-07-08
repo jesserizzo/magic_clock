@@ -221,7 +221,6 @@ def __main__():
     try:
         while True:
             read_config_file()
-            print(CONFIG_DICT)
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(CONFIG_DICT["trackers"])):
