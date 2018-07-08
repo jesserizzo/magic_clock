@@ -58,13 +58,9 @@ def read_config_file():
 
 def set_step(motor_num, pins_high_or_low_list):
     """Set to high the specified pins to switch each step of the motor,
-    see the arrays in backwards and forwards functions. The range in the
-    for loop gets the 4 motor pins in the CONFIG_DICT for the specified
-    motor. For example motor 0 gets CONFIG_DICT['motor_pins'][0-3]
-    and motor 3 gets CONFIG_DICT['motor_pins'][12-15] etc."""
-    for pin_num, i in zip(range(motor_num*4, motor_num*4+4),
-                          pins_high_or_low_list):
-        GPIO.output(CONFIG_DICT["motor_pins"][pin_num],
+    see the arrays in backwards and forwards functions."""
+    for i in range(4):
+        GPIO.output(CONFIG_DICT["motor_pins"][motor_num][i],
                     pins_high_or_low_list[i])
 
 
@@ -100,7 +96,7 @@ def forward(steps, motor_num):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            set_step(motor_num, forwards[j][0])
+            set_step(motor_num, forwards[j])
             time.sleep(CONFIG_DICT["motor_delay"])
 
 
@@ -171,10 +167,10 @@ def move_clock_hand(hand_num, new_position):
         if num_steps > 0:
             forward(num_steps * 51, hand_num)
             # So the motor doesn't draw power when not moving
-            set_step(hand_num, 0, 0, 0, 0)
+            set_step(hand_num, [0, 0, 0, 0])
         elif num_steps < 0:
             backwards(abs(num_steps * 51), hand_num)
-            set_step(hand_num, 0, 0, 0, 0)
+            set_step(hand_num, [0, 0, 0, 0])
         write_hand_position_to_file(new_position, hand_num)
 
 
@@ -200,8 +196,8 @@ def write_hand_position_to_file(hand_position, hand_num):
 def __main__():
     try:
         while True:
-            setup_GPIO()
             read_config_file()
+            setup_GPIO()
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(CONFIG_DICT["trackers"])):
