@@ -85,21 +85,25 @@ def forward(steps, motor_num):
 
 
 def get_location(tracker):
-    """Get  location from Home Assistant"""
-    url = "{}/api/states/{}?api_password={}".format(URL, tracker, PWD)
+    """Get  location from the Home Assistant Api"""
+    url = "{}/api/states/{}".format(URL, tracker)
+    headers = {'x-ha-access': PWD,
+               'content-type': 'application/json'}
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, headers=headers, timeout=5)
         return (json.loads(response.text)["state"])
     except (requests.exceptions.RequestException, ValueError):
-        print("error getting location for {0}".format(tracker))
+        print("error getting location for {}".format(tracker))
         return
 
 
 def get_travelling(proximity):
-    """Get proximity status from Home Assistant"""
-    url = "{}/api/states/{}?api_password={}".format(URL, proximity, PWD)
+    """Get proximity status from the Home Assistant Api"""
+    url = "{}/api/states/{}".format(URL, proximity)
+    headers = {'x-ha-access': PWD,
+               'content-type': 'application/json'}
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, headers=headers, timeout=5)
         return (json.loads(response.text)["attributes"]["dir_of_travel"])
     except (requests.exceptions.RequestException, ValueError):
         print("error getting travelling status for {}".format(proximity))
@@ -135,8 +139,8 @@ def get_status(tracker, proximity):
 
 
 def move_clock_hand(hand_num, new_position):
-    """Calculate how many steps to move the hand and store the
-    new hand position"""
+    """Calculate how many steps to move the hand, move it,
+    and store the new hand position to file"""
     steps = 0
     if new_position == CLOCK_HANDS[hand_num]:
         pass
