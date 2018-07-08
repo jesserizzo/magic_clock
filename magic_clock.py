@@ -32,8 +32,8 @@ GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
 
 
-def setStep(motor_num, w1, w2, w3, w4):
-"""Set to high the specified pins to switch each step of the motor"""
+def set_step(motor_num, w1, w2, w3, w4):
+    """Set to high the specified pins to switch each step of the motor"""
     if motor_num == 0:
         GPIO.output(MOTOR_0_PHASE_A, w1)
         GPIO.output(MOTOR_0_PHASE_B, w2)
@@ -60,8 +60,8 @@ def backwards(steps, motor_num):
     backwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(motor_num, backwards[j][0], backwards[j][1],
-                    backwards[j][2], backwards[j][3])
+            set_step(motor_num, backwards[j][0], backwards[j][1],
+                     backwards[j][2], backwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
@@ -79,8 +79,8 @@ def forward(steps, motor_num):
     forwards[7] = [1, 0, 0, 1]
     for i in range(steps):
         for j in range(8):
-            setStep(motor_num, forwards[j][0], forwards[j][1], forwards[j][2],
-                    forwards[j][3])
+            set_step(motor_num, forwards[j][0], forwards[j][1], forwards[j][2],
+                     forwards[j][3])
             time.sleep(MOTOR_DELAY)
 
 
@@ -149,8 +149,11 @@ def move_clock_hand(hand_num, new_position):
         # revolution, and I've got 10 locations on my clock face
         if num_steps > 0:
             forward(num_steps * 51, hand_num)
+            # So the motor doesn't draw power when not moving
+            set_step(hand_num, 0, 0, 0, 0)
         elif num_steps < 0:
             backwards(abs(num_steps * 51), hand_num)
+            set_step(hand_num, 0, 0, 0, 0)
         write_hand_position_to_file(new_position, hand_num)
 
 
