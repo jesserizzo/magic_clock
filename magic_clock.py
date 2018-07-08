@@ -9,41 +9,41 @@ import time
 MOTOR_DELAY = 0.01
 
 # The pins on the Raspberry pi used to drive the motor controller(s)
-MOTOR_1_PHASE_A = 6
-MOTOR_1_PHASE_B = 13
-MOTOR_1_PHASE_C = 19
-MOTOR_1_PHASE_D = 26
-MOTOR_2_PHASE_A = 12
-MOTOR_2_PHASE_B = 16
-MOTOR_2_PHASE_C = 20
-MOTOR_2_PHASE_D = 21
+MOTOR_0_PHASE_A = 6
+MOTOR_0_PHASE_B = 13
+MOTOR_0_PHASE_C = 19
+MOTOR_0_PHASE_D = 26
+MOTOR_1_PHASE_A = 12
+MOTOR_1_PHASE_B = 16
+MOTOR_1_PHASE_C = 20
+MOTOR_1_PHASE_D = 21
 
 
-# Set up the GPIO pins on the Raspberry Pi
+# Set up the GPIO pins on the Raspberry Pi to outputs
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
+GPIO.setup(MOTOR_0_PHASE_A, GPIO.OUT)
+GPIO.setup(MOTOR_0_PHASE_B, GPIO.OUT)
+GPIO.setup(MOTOR_0_PHASE_C, GPIO.OUT)
+GPIO.setup(MOTOR_0_PHASE_D, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_A, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_B, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_C, GPIO.OUT)
 GPIO.setup(MOTOR_1_PHASE_D, GPIO.OUT)
-GPIO.setup(MOTOR_2_PHASE_A, GPIO.OUT)
-GPIO.setup(MOTOR_2_PHASE_B, GPIO.OUT)
-GPIO.setup(MOTOR_2_PHASE_C, GPIO.OUT)
-GPIO.setup(MOTOR_2_PHASE_D, GPIO.OUT)
 
 
-# Function that actually makes the motor spin.
 def setStep(motor_num, w1, w2, w3, w4):
+"""Set to high the specified pins to switch each step of the motor"""
     if motor_num == 0:
+        GPIO.output(MOTOR_0_PHASE_A, w1)
+        GPIO.output(MOTOR_0_PHASE_B, w2)
+        GPIO.output(MOTOR_0_PHASE_C, w3)
+        GPIO.output(MOTOR_0_PHASE_D, w4)
+    if motor_num == 1:
         GPIO.output(MOTOR_1_PHASE_A, w1)
         GPIO.output(MOTOR_1_PHASE_B, w2)
         GPIO.output(MOTOR_1_PHASE_C, w3)
         GPIO.output(MOTOR_1_PHASE_D, w4)
-    if motor_num == 1:
-        GPIO.output(MOTOR_2_PHASE_A, w1)
-        GPIO.output(MOTOR_2_PHASE_B, w2)
-        GPIO.output(MOTOR_2_PHASE_C, w3)
-        GPIO.output(MOTOR_2_PHASE_D, w4)
 
 
 def backwards(steps, motor_num):
@@ -131,8 +131,6 @@ def get_status(tracker, proximity):
         return 6
     elif get_location(tracker) == "hospital":
         return 7
-    elif get_location(tracker) == "prison":
-        return 9
     else:
         # Point clock hand to "elsewhere".
         return 8
@@ -147,6 +145,8 @@ def move_clock_hand(hand_num, new_position):
     else:
         num_steps = new_position - CLOCK_HANDS[hand_num]
         CLOCK_HANDS[hand_num] = CLOCK_HANDS[hand_num] + num_steps
+        # It's num_steps * 51 because the motor has 512 steps in a full
+        # revolution, and I've got 10 locations on my clock face
         if num_steps > 0:
             forward(num_steps * 51, hand_num)
         elif num_steps < 0:
