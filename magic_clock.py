@@ -26,13 +26,15 @@ def read_config_file():
             CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
             CONFIG_DICT["motor_delay"] = config_json["motor_delay"]
     except FileNotFoundError:
-        print ("config.txt file not found. See readme for instructions "
+        print ("config.json file not found. See readme for instructions "
                "on setting up config.txt")
-        exit()
+        time.sleep(60)
+        read_config_file()
     except KeyError:
-        print ("Config.txt not set up correctly. See readme for instructions "
+        print ("config.json not set up correctly. See readme for instructions "
                "on setting up config.txt")
-        exit()
+        time.sleep(60)
+        read_config_file()
 
     # Reads update interval from config.json, if not found defaults
     # to 60 seconds
