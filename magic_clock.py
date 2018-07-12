@@ -125,7 +125,7 @@ async def backwards(steps, motor_num):
     for i in range(steps):
         for j in range(8):
             set_step(motor_num, backwards[j])
-            time.sleep(CONFIG_DICT["motor_delay"])
+            await asyncio.sleep(CONFIG_DICT["motor_delay"])
 
 
 async def forward(steps, motor_num):
@@ -143,7 +143,7 @@ async def forward(steps, motor_num):
     for i in range(steps):
         for j in range(8):
             set_step(motor_num, forwards[j])
-            time.sleep(CONFIG_DICT["motor_delay"])
+            await asyncio.sleep(CONFIG_DICT["motor_delay"])
 
 
 def get_location(tracker):
