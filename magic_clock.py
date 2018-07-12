@@ -110,7 +110,7 @@ def set_step(motor_num, pins_high_or_low_list):
                     pins_high_or_low_list[i])
 
 
-def backwards(steps, motor_num):
+async def backwards(steps, motor_num):
     """Look up documentation for your motor driver board to find what
     pins to energize in what order. This is for the ULN2003"""
     backwards = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -128,7 +128,7 @@ def backwards(steps, motor_num):
             time.sleep(CONFIG_DICT["motor_delay"])
 
 
-def forward(steps, motor_num):
+async def forward(steps, motor_num):
     """Look up documentation for your motor driver board to find what
     pins to energize in what order. This is for the ULN2003"""
     forwards = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -215,11 +215,12 @@ async def move_clock_hand(future, hand_num, new_position):
         # It's num_steps * 51 because the motor has 512 steps in a full
         # revolution, and I've got 10 locations on my clock face
         if num_steps > 0:
-            forward(num_steps * 51, hand_num)
+            await asyncio.ensure_future(forward(num_steps * 51, hand_num))
             # So the motor doesn't draw power when not moving
             set_step(hand_num, [0, 0, 0, 0])
         elif num_steps < 0:
-            backwards(abs(num_steps * 51), hand_num)
+            await asyncio.ensure_future(backwards(abs(num_steps * 51),
+                                                  hand_num))
             set_step(hand_num, [0, 0, 0, 0])
         write_hand_position_to_file(new_position, hand_num)
         future.set_result("")
@@ -254,21 +255,11 @@ def __main__():
             # Getting the new position and moving the clock hand for each
             loop = asyncio.get_event_loop()
             for i in range(len(CONFIG_DICT["trackers"])):
-                """
-                a = loop.create_future()
-                b = loop.create_future()
-                loop.create_task(task_a(a, "test"))
-                loop.create_task(task_b(b, "test"))
-
-                loop.run_until_complete(a)
-                loop.run_until_complete(b)
-                third_function(a.result())
-                """
                 new_position = get_status(CONFIG_DICT["trackers"][i],
                                           CONFIG_DICT["proximities"][i])
                 future = loop.create_future()
                 loop.create_task(move_clock_hand(future, i, new_position))
-                #move_clock_hand(i, new_position)
+                # move_clock_hand(i, new_position)
             loop.run_until_complete(future)
             time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
