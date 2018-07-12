@@ -156,7 +156,9 @@ def get_location(tracker):
         response = requests.get(url, headers=headers, timeout=5)
         return (json.loads(response.text)["state"])
     except (requests.exceptions.RequestException, ValueError):
-        print("error getting location for {}".format(tracker))
+        message = "error getting location for {}".format(tracker)
+        print(message)
+        write_log(message)
         return
 
 
@@ -169,7 +171,9 @@ def get_travelling(proximity):
         response = requests.get(url, headers=headers, timeout=5)
         return (json.loads(response.text)["attributes"]["dir_of_travel"])
     except (requests.exceptions.RequestException, ValueError):
-        print("error getting travelling status for {}".format(proximity))
+        message = "error getting travelling status for {}".format(proximity)
+        print(message)
+        write_log(message)
         return
 
 
@@ -242,10 +246,10 @@ def write_hand_position_to_file(hand_position, hand_num):
 
 def __main__():
     write_log("Program started")
+    read_config_file()
+    setup_GPIO()
     try:
         while True:
-            read_config_file()
-            setup_GPIO()
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(CONFIG_DICT["trackers"])):
@@ -254,10 +258,10 @@ def __main__():
                 move_clock_hand(i, new_position)
                 time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
-        write_log("Program shutdown")
+        write_log("Program shutdown by user")
         GPIO.cleanup()
         exit()
-    except Exception as x:
+    except:
         write_log(traceback.format_exc())
         traceback.print_exc()
         exit()
