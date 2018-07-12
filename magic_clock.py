@@ -1,6 +1,6 @@
 import requests
 import json
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import time
 from datetime import datetime
 import traceback
@@ -82,10 +82,8 @@ def read_config_file(read_tries=1):
 
 
 def write_log(message):
-    print()
     try:
-        with open("magic_clock.log", "r+") as log:
-            log.seek(0, 2)
+        with open("magic_clock.log", "a+") as log:
             log.write("{} - {}\n".format(datetime.now().strftime
                                          ("%Y-%m-%d %H:%M:%S"), message))
             log.seek(0)
@@ -245,10 +243,10 @@ def write_hand_position_to_file(hand_position, hand_num):
 
 
 def __main__():
-    write_log("Program started")
-    read_config_file()
-    setup_GPIO()
     try:
+        write_log("Program started")
+        read_config_file()
+        setup_GPIO()
         while True:
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
@@ -264,6 +262,7 @@ def __main__():
     except:
         write_log(traceback.format_exc())
         traceback.print_exc()
+        print('poo')
         exit()
 
 if __name__ == "__main__":
