@@ -1,6 +1,6 @@
 import requests
 import json
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import time
 from datetime import datetime
 import traceback
@@ -86,11 +86,11 @@ def write_log(message):
         with open("magic_clock.log", "a+") as log:
             log.write("{} - {}\n".format(datetime.now().strftime
                                          ("%Y-%m-%d %H:%M:%S"), message))
-            log.seek(0)
-            lines = log.readlines()
+        with open("magic_clock.log", "r+") as log:
             # If there is too many lines in the log, go back to the beginning
             # of the file, over write with the number of lines we should
             # have and truncate the rest of the file
+            lines = log.readlines()
             if len(lines) > CONFIG_DICT["max_log_lines"]:
                 log.seek(0)
                 for i in range(len(lines) - CONFIG_DICT["max_log_lines"],
@@ -262,7 +262,6 @@ def __main__():
     except:
         write_log(traceback.format_exc())
         traceback.print_exc()
-        print('poo')
         exit()
 
 if __name__ == "__main__":
