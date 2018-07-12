@@ -17,60 +17,68 @@ def setup_GPIO():
         GPIO.setup(pin, GPIO.OUT)
 
 
-def read_config_file():
+def read_config_file(read_tries=1):
     """Reads config.json file for some constants"""
     try:
         with open("config.json", "r") as config:
             config_json = json.loads(config.read())
-            CONFIG_DICT["password"] = config_json["password"]
-            CONFIG_DICT["trackers"] = config_json["trackers"]
-            CONFIG_DICT["proximities"] = config_json["proximities"]
-            CONFIG_DICT["url"] = config_json["url"]
-            CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
-            CONFIG_DICT["motor_delay"] = config_json["motor_delay"]
+            try:
+                CONFIG_DICT["password"] = config_json["password"]
+                CONFIG_DICT["trackers"] = config_json["trackers"]
+                CONFIG_DICT["proximities"] = config_json["proximities"]
+                CONFIG_DICT["url"] = config_json["url"]
+                CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
+                CONFIG_DICT["motor_delay"] = config_json["motor_delay"]
+            except KeyError:
+                message = "config.json not set up correctly. See readme for "
+                message += "instructions on setting up config.json"
+                print (message)
+                write_log(message)
+                exit()
+
+            # Reads max log lines from the config, default to 100
+            try:
+                CONFIG_DICT["max_log_lines"] = config_json["max_log_lines"]
+            except KeyError:
+                CONFIG_DICT["max_log_lines"] = 100
+
+            # Reads update interval from config.json, defaults to 60 seconds
+            try:
+                CONFIG_DICT["update_interval"] = \
+                    config_json["update_interval"]
+            except KeyError:
+                CONFIG_DICT["update_interval"] = 60
+
+            # Reads clock hands position from the config file, defaults to
+            # all at 0
+            try:
+                CONFIG_DICT["clock_hands"] = config_json["clock_hands"]
+            except KeyError:
+                CONFIG_DICT["clock_hands"] = []
+                for i in range(len(CONFIG_DICT["trackers"])):
+                    CONFIG_DICT["clock_hands"].append(0)
+                write_hand_position_to_file(CONFIG_DICT["clock_hands"], None)
+
     except FileNotFoundError:
         message = "config.json file not found. See readme for instructions "
         message += "on setting up config.json"
         print (message)
         write_log(message)
         time.sleep(60)
-        read_config_file()
-    except KeyError:
-        message = "config.json not set up correctly. See readme for "
+
+        if read_tries > 4:
+            message = "Unable to read config.json. Shutting down"
+            print(message)
+            write_log(message)
+            exit()
+        read_config_file(read_tries + 1)
+
+    except json.JSONDecodeError:
+        message = "config.json file not set up correctly. See readme for "
         message += "instructions on setting up config.json"
         print (message)
         write_log(message)
-        time.sleep(60)
-        read_config_file()
-
-    # Reads max log lines from the config, default to 100
-    try:
-        with open("config.json", "r") as config:
-            config_json = json.loads(config.read())
-            CONFIG_DICT["max_log_lines"] = config_json["max_log_lines"]
-    except KeyError:
-        CONFIG_DICT["max_log_lines"] = 100
-
-    # Reads update interval from config.json, if not found defaults
-    # to 60 seconds
-    try:
-        with open("config.json", "r") as config:
-            config_json = json.loads(config.read())
-            CONFIG_DICT["update_interval"] = config_json["update_interval"]
-    except KeyError:
-        CONFIG_DICT["update_interval"] = 60
-
-    # Reads clock hands position from the config file, if not found
-    # then set them all to 0
-    with open("config.json", "r+") as config:
-        config_json = json.loads(config.read())
-        try:
-            CONFIG_DICT["clock_hands"] = config_json["clock_hands"]
-        except KeyError:
-            CONFIG_DICT["clock_hands"] = []
-            for i in range(len(CONFIG_DICT["trackers"])):
-                CONFIG_DICT["clock_hands"].append(0)
-            write_hand_position_to_file(CONFIG_DICT["clock_hands"], None)
+        exit()
 
 
 def write_log(message):
