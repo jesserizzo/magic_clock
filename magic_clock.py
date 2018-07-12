@@ -178,23 +178,25 @@ def get_travelling(proximity):
 def get_status(tracker, proximity):
     """Gets the location and proximity states from Home Assistant and
     returns an int corresponding to location on the clock face"""
-    if get_location(tracker) == "mortal peril":
+    location = get_location(tracker)
+    travelling = get_travelling(proximity)
+    if location == "mortal peril":
         return 0
-    elif get_location(tracker) == "friends":
+    elif location == "friends":
         return 1
-    elif get_location(tracker) == "family":
+    elif location == "family":
         return 2
-    elif get_location(tracker) == "work":
+    elif location == "work":
         return 3
-    elif get_location(tracker) == "home":
+    elif location == "home":
         return 4
-    elif get_location(tracker) == "not_home" and get_travelling(proximity) \
-            == "towards" or get_travelling(proximity) == "away_from":
+    elif location == "not_home" and travelling == "towards" or travelling \
+            == "away_from":
         # Point clock hand to traveling
         return 5
-    elif get_location(tracker) == "school":
+    elif location == "school":
         return 6
-    elif get_location(tracker) == "hospital":
+    elif location == "hospital":
         return 7
     else:
         # Point clock hand to "elsewhere".
