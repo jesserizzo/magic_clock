@@ -2,9 +2,12 @@ import requests
 import json
 import RPi.GPIO as GPIO
 import time
+from datetime import datetime
+import traceback
 
 
 CONFIG_DICT = {}
+
 
 def setup_GPIO():
     """Set up the GPIO pins on the Raspberry Pi to outputs"""
@@ -26,15 +29,27 @@ def read_config_file():
             CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
             CONFIG_DICT["motor_delay"] = config_json["motor_delay"]
     except FileNotFoundError:
-        print ("config.json file not found. See readme for instructions "
-               "on setting up config.txt")
+        message = "config.json file not found. See readme for instructions "
+        message += "on setting up config.json"
+        print (message)
+        write_log(message)
         time.sleep(60)
         read_config_file()
     except KeyError:
-        print ("config.json not set up correctly. See readme for instructions "
-               "on setting up config.txt")
+        message = "config.json not set up correctly. See readme for "
+        message += "instructions on setting up config.json"
+        print (message)
+        write_log(message)
         time.sleep(60)
         read_config_file()
+
+    # Reads max log lines from the config, default to 100
+    try:
+        with open("config.json", "r") as config:
+            config_json = json.loads(config.read())
+            CONFIG_DICT["max_log_lines"] = config_json["max_log_lines"]
+    except KeyError:
+        CONFIG_DICT["max_log_lines"] = 100
 
     # Reads update interval from config.json, if not found defaults
     # to 60 seconds
@@ -56,6 +71,28 @@ def read_config_file():
             for i in range(len(CONFIG_DICT["trackers"])):
                 CONFIG_DICT["clock_hands"].append(0)
             write_hand_position_to_file(CONFIG_DICT["clock_hands"], None)
+
+
+def write_log(message):
+    print()
+    try:
+        with open("magic_clock.log", "r+") as log:
+            log.seek(0, 2)
+            log.write("{} - {}\n".format(datetime.now().strftime
+                                         ("%Y-%m-%d %H:%M:%S"), message))
+            log.seek(0)
+            lines = log.readlines()
+            # If there is too many lines in the log, go back to the beginning
+            # of the file, over write with the number of lines we should
+            # have and truncate the rest of the file
+            if len(lines) > CONFIG_DICT["max_log_lines"]:
+                log.seek(0)
+                for i in range(len(lines) - CONFIG_DICT["max_log_lines"],
+                               len(lines)):
+                    log.write(lines[i])
+                log.truncate()
+    except:
+        return
 
 
 def set_step(motor_num, pins_high_or_low_list):
@@ -196,6 +233,7 @@ def write_hand_position_to_file(hand_position, hand_num):
 
 
 def __main__():
+    write_log("Program started")
     try:
         while True:
             read_config_file()
@@ -208,7 +246,12 @@ def __main__():
                 move_clock_hand(i, new_position)
                 time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
+        write_log("Program shutdown")
         GPIO.cleanup()
+        exit()
+    except Exception as x:
+        write_log(traceback.format_exc())
+        traceback.print_exc()
         exit()
 
 if __name__ == "__main__":

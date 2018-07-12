@@ -33,6 +33,7 @@ that I used, you need 4 gpio pins, a 5 volt, and a ground for each motor.
 * **Proximities:** A list of the entity ids for all the proximities you want to use.
 * **Url:** The Url or IP address, and port number of your Home Assistant server.
 * **Update Interval *(Optional):*** The interval in seconds between queries of your Home Assistant. If not included it defaults to 60 seconds
+* **Max Log Lines *(Optional):*** The maximum number of lines to store in the log file. If not included it defaults to 100
 * **Clock Hands *(Optional):*** A list of integers corresponding to the starting position of the clock hands. If not included it will set them all to 0.
 * **Motor Delay:** The time in seconds between each phase of the motor step. The lower this number the faster the motor will turn.
 * **Motor Pins:** A list of lists of the pins you have connected to your motor driver boards. They need to be listed as
@@ -48,6 +49,7 @@ that I used, you need 4 gpio pins, a 5 volt, and a ground for each motor.
 "proximities": ["PROXIMITY.PROXIMITY1", "PROXIMITY.PROXIMITY2"],
 "url": "URL_AND_PORT_NUMBER_FOR_HOME_ASSISTANT",
 "update_interval": NUMBER_OF_SECONDS_BETWEEN_UPDATES,
+"max_log_lines": 100,
 "clock_hands": [0, 0, ...],
 "motor_delay": 0.01,
 "motor_pins":[[1, 2, 3, 4], [5, 6, 7, 8], ...]
