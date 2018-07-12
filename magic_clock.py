@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import time
 from datetime import datetime
 import traceback
+import asyncio
 
 
 CONFIG_DICT = {}
@@ -201,12 +202,12 @@ def get_status(tracker, proximity):
         return 8
 
 
-def move_clock_hand(hand_num, new_position):
+async def move_clock_hand(future, hand_num, new_position):
     """Calculate how many steps to move the hand, move it,
     and store the new hand position to file"""
     steps = 0
     if new_position == CONFIG_DICT["clock_hands"][hand_num]:
-        pass
+        future.set_result("")
     else:
         num_steps = new_position - CONFIG_DICT["clock_hands"][hand_num]
         CONFIG_DICT["clock_hands"][hand_num] =\
@@ -221,6 +222,7 @@ def move_clock_hand(hand_num, new_position):
             backwards(abs(num_steps * 51), hand_num)
             set_step(hand_num, [0, 0, 0, 0])
         write_hand_position_to_file(new_position, hand_num)
+        future.set_result("")
 
 
 def write_hand_position_to_file(hand_position, hand_num):
@@ -250,11 +252,25 @@ def __main__():
         while True:
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
+            loop = asyncio.get_event_loop()
             for i in range(len(CONFIG_DICT["trackers"])):
+                """
+                a = loop.create_future()
+                b = loop.create_future()
+                loop.create_task(task_a(a, "test"))
+                loop.create_task(task_b(b, "test"))
+
+                loop.run_until_complete(a)
+                loop.run_until_complete(b)
+                third_function(a.result())
+                """
                 new_position = get_status(CONFIG_DICT["trackers"][i],
                                           CONFIG_DICT["proximities"][i])
-                move_clock_hand(i, new_position)
-                time.sleep(CONFIG_DICT["update_interval"])
+                future = loop.create_future()
+                loop.create_task(move_clock_hand(future, i, new_position))
+                #move_clock_hand(i, new_position)
+            loop.run_until_complete(future)
+            time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
         write_log("Program shutdown by user")
         GPIO.cleanup()
