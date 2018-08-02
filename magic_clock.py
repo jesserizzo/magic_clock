@@ -32,7 +32,7 @@ def read_config_file(read_tries=1):
             except KeyError:
                 message = "config.json not set up correctly. See readme for "
                 message += "instructions on setting up config.json"
-                print (message)
+                print(message)
                 write_log(message)
                 exit()
 
@@ -44,8 +44,7 @@ def read_config_file(read_tries=1):
 
             # Reads update interval from config.json, defaults to 60 seconds
             try:
-                CONFIG_DICT["update_interval"] = \
-                    config_json["update_interval"]
+                CONFIG_DICT["update_interval"] = config_json["update_interval"]
             except KeyError:
                 CONFIG_DICT["update_interval"] = 60
 
@@ -62,7 +61,7 @@ def read_config_file(read_tries=1):
     except FileNotFoundError:
         message = "config.json file not found. See readme for instructions "
         message += "on setting up config.json"
-        print (message)
+        print(message)
         write_log(message)
         time.sleep(60)
 
@@ -76,7 +75,7 @@ def read_config_file(read_tries=1):
     except json.JSONDecodeError:
         message = "config.json file not set up correctly. See readme for "
         message += "instructions on setting up config.json"
-        print (message)
+        print(message)
         write_log(message)
         exit()
 
@@ -84,8 +83,11 @@ def read_config_file(read_tries=1):
 def write_log(message):
     try:
         with open("magic_clock.log", "a+") as log:
-            log.write("{} - {}\n".format(datetime.now().strftime
-                                         ("%Y-%m-%d %H:%M:%S"), message))
+            log.write(
+                "{} - {}\n".format(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message
+                )
+            )
         with open("magic_clock.log", "r+") as log:
             # If there is too many lines in the log, go back to the beginning
             # of the file, over write with the number of lines we should
@@ -93,8 +95,9 @@ def write_log(message):
             lines = log.readlines()
             if len(lines) > CONFIG_DICT["max_log_lines"]:
                 log.seek(0)
-                for i in range(len(lines) - CONFIG_DICT["max_log_lines"],
-                               len(lines)):
+                for i in range(
+                    len(lines) - CONFIG_DICT["max_log_lines"], len(lines)
+                ):
                     log.write(lines[i])
                 log.truncate()
     except:
@@ -105,8 +108,9 @@ def set_step(motor_num, pins_high_or_low_list):
     """Set to high the specified pins to switch each step of the motor,
     see the arrays in backwards and forwards functions."""
     for i in range(4):
-        GPIO.output(CONFIG_DICT["motor_pins"][motor_num][i],
-                    pins_high_or_low_list[i])
+        GPIO.output(
+            CONFIG_DICT["motor_pins"][motor_num][i], pins_high_or_low_list[i]
+        )
 
 
 def backwards(steps, motor_num):
@@ -148,11 +152,13 @@ def forward(steps, motor_num):
 def get_location(tracker):
     """Get  location from the Home Assistant Api"""
     url = "{}/api/states/{}".format(CONFIG_DICT["url"], tracker)
-    headers = {'x-ha-access': CONFIG_DICT["password"],
-               'content-type': 'application/json'}
+    headers = {
+        "x-ha-access": CONFIG_DICT["password"],
+        "content-type": "application/json",
+    }
     try:
         response = requests.get(url, headers=headers, timeout=5)
-        return (json.loads(response.text)["state"])
+        return json.loads(response.text)["state"]
     except (requests.exceptions.RequestException, ValueError):
         message = "error getting location for {}".format(tracker)
         print(message)
@@ -163,11 +169,13 @@ def get_location(tracker):
 def get_travelling(proximity):
     """Get proximity status from the Home Assistant Api"""
     url = "{}/api/states/{}".format(CONFIG_DICT["url"], proximity)
-    headers = {'x-ha-access': CONFIG_DICT["password"],
-               'content-type': 'application/json'}
+    headers = {
+        "x-ha-access": CONFIG_DICT["password"],
+        "content-type": "application/json",
+    }
     try:
         response = requests.get(url, headers=headers, timeout=5)
-        return (json.loads(response.text)["attributes"]["dir_of_travel"])
+        return json.loads(response.text)["attributes"]["dir_of_travel"]
     except (requests.exceptions.RequestException, ValueError):
         message = "error getting travelling status for {}".format(proximity)
         print(message)
@@ -180,23 +188,22 @@ def get_status(tracker, proximity):
     returns an int corresponding to location on the clock face"""
     location = get_location(tracker)
     travelling = get_travelling(proximity)
-    if location == "mortal peril":
-        return 0
-    elif location == "friends":
-        return 1
-    elif location == "family":
-        return 2
-    elif location == "work":
-        return 3
-    elif location == "home":
-        return 4
-    elif location == "not_home" and travelling == "towards" or travelling \
-            == "away_from":
-        # Point clock hand to traveling
+    if (travelling == "towards" or travelling == "away_from"):
         return 5
-    elif location == "school":
+    elif location == "mortal peril":
+        return 0
+    elif location == "friends" && traveling == "stationary":
+        return 1
+    elif location == "family" && traveling == "stationary":
+        return 2
+    elif location == "work" && traveling == "stationary":
+        return 3
+    elif location == "home" && traveling == "stationary":
+        return 4
+
+    elif location == "school" && traveling == "stationary":
         return 6
-    elif location == "hospital":
+    elif location == "hospital" && traveling == "stationary":
         return 7
     else:
         # Point clock hand to "elsewhere".
@@ -211,8 +218,9 @@ def move_clock_hand(hand_num, new_position):
         pass
     else:
         num_steps = new_position - CONFIG_DICT["clock_hands"][hand_num]
-        CONFIG_DICT["clock_hands"][hand_num] =\
+        CONFIG_DICT["clock_hands"][hand_num] = (
             CONFIG_DICT["clock_hands"][hand_num] + num_steps
+        )
         # It's num_steps * 51 because the motor has 512 steps in a full
         # revolution, and I've got 10 locations on my clock face
         if num_steps > 0:
@@ -247,14 +255,16 @@ def write_hand_position_to_file(hand_position, hand_num):
 def __main__():
     try:
         write_log("Program started")
+        print("Program started")
         read_config_file()
         setup_GPIO()
         while True:
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(CONFIG_DICT["trackers"])):
-                new_position = get_status(CONFIG_DICT["trackers"][i],
-                                          CONFIG_DICT["proximities"][i])
+                new_position = get_status(
+                    CONFIG_DICT["trackers"][i], CONFIG_DICT["proximities"][i]
+                )
                 move_clock_hand(i, new_position)
                 time.sleep(CONFIG_DICT["update_interval"])
     except KeyboardInterrupt:
@@ -265,6 +275,7 @@ def __main__():
         write_log(traceback.format_exc())
         traceback.print_exc()
         exit()
+
 
 if __name__ == "__main__":
     __main__()
