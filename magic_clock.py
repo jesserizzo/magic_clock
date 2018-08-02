@@ -192,18 +192,18 @@ def get_status(tracker, proximity):
         return 5
     elif location == "mortal peril":
         return 0
-    elif location == "friends" && traveling == "stationary":
+    elif location == "friends" and traveling == "stationary":
         return 1
-    elif location == "family" && traveling == "stationary":
+    elif location == "family" and traveling == "stationary":
         return 2
-    elif location == "work" && traveling == "stationary":
+    elif location == "work" and traveling == "stationary":
         return 3
-    elif location == "home" && traveling == "stationary":
+    elif location == "home" and traveling == "stationary":
         return 4
 
-    elif location == "school" && traveling == "stationary":
+    elif location == "school" and traveling == "stationary":
         return 6
-    elif location == "hospital" && traveling == "stationary":
+    elif location == "hospital" and traveling == "stationary":
         return 7
     else:
         # Point clock hand to "elsewhere".
