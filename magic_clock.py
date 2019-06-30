@@ -23,8 +23,9 @@ def read_config_file(read_tries=1):
         with open("config.json", "r") as config:
             config_json = json.loads(config.read())
             try:
-                CONFIG_DICT["password"] = config_json["password"]
+                CONFIG_DICT["access_token"] = config_json["access_token"]
                 CONFIG_DICT["trackers"] = config_json["trackers"]
+                CONFIG_DICT["group_location"] = config_json["group_location"]
                 CONFIG_DICT["proximities"] = config_json["proximities"]
                 CONFIG_DICT["url"] = config_json["url"]
                 CONFIG_DICT["motor_pins"] = config_json["motor_pins"]
@@ -149,19 +150,23 @@ def forward(steps, motor_num):
             time.sleep(CONFIG_DICT["motor_delay"])
 
 
-def get_location(tracker):
+def get_location(tracker, group_location):
     """Get  location from the Home Assistant Api"""
     url = "{}/api/states/{}".format(CONFIG_DICT["url"], tracker)
+    url_group = "{}/api/states/{}".format(CONFIG_DICT["url"], group_location)
     headers = {
-        "x-ha-access": CONFIG_DICT["password"],
-        "content-type": "application/json",
+          "Authorization": "Bearer {}".format(CONFIG_DICT["access_token"]),
+          "content-type": "application/json",
     }
     try:
         response = requests.get(url, headers=headers, timeout=5)
-        return json.loads(response.text)["state"]
+        response_group = requests.get(url_group, headers=headers, timeout=5)
+        #print(str(response.status_code) + "location")
+        #print(str(reponse_group.status_code) + "group location")
+        return (json.loads(response.text)["state"], json.loads(response_group.text)["state"])
     except (requests.exceptions.RequestException, ValueError):
         message = "error getting location for {}".format(tracker)
-        print(message)
+        #print(message)
         write_log(message)
         return
 
@@ -170,25 +175,38 @@ def get_travelling(proximity):
     """Get proximity status from the Home Assistant Api"""
     url = "{}/api/states/{}".format(CONFIG_DICT["url"], proximity)
     headers = {
-        "x-ha-access": CONFIG_DICT["password"],
+        "Authorization": "Bearer {}".format(CONFIG_DICT["access_token"]),
         "content-type": "application/json",
     }
     try:
         response = requests.get(url, headers=headers, timeout=5)
+        #print(str(response.status_code) + "traveling")
         return json.loads(response.text)["attributes"]["dir_of_travel"]
     except (requests.exceptions.RequestException, ValueError):
         message = "error getting travelling status for {}".format(proximity)
-        print(message)
+        #print(message)
         write_log(message)
         return
 
 
-def get_status(tracker, proximity):
+def get_status(tracker, group_location, proximity):
     """Gets the location and proximity states from Home Assistant and
     returns an int corresponding to location on the clock face"""
-    location = get_location(tracker)
+    location_results = get_location(tracker, group_location)
+    location = ""
+    group_location = ""
+    try:
+        if (location_results):
+            location = location_results[0]
+            group_location = location_results[1]
+    except:
+        write_log("Error parsing location results")
+
     travelling = get_travelling(proximity)
-    if (travelling == "towards" or travelling == "away_from"):
+
+    if group_location == "home":
+        return 4
+    elif (travelling == "towards" or travelling == "away_from"):
         return 5
     elif location == "mortal peril":
         return 0
@@ -198,9 +216,6 @@ def get_status(tracker, proximity):
         return 2
     elif location == "work" and travelling == "stationary":
         return 3
-    elif location == "home" and travelling == "stationary":
-        return 4
-
     elif location == "school" and travelling == "stationary":
         return 6
     elif location == "hospital" and travelling == "stationary":
@@ -263,7 +278,7 @@ def __main__():
             # Getting the new position and moving the clock hand for each
             for i in range(len(CONFIG_DICT["trackers"])):
                 new_position = get_status(
-                    CONFIG_DICT["trackers"][i], CONFIG_DICT["proximities"][i]
+                    CONFIG_DICT["trackers"][i], CONFIG_DICT["group_location"][i] ,CONFIG_DICT["proximities"][i]
                 )
                 move_clock_hand(i, new_position)
                 time.sleep(CONFIG_DICT["update_interval"])
