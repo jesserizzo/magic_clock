@@ -36,7 +36,6 @@ class FileIO:
                 try:
                     self.dict["access_token"] = config_json["access_token"]
                     self.dict["trackers"] = config_json["trackers"]
-                    self.dict["group_location"] = config_json["group_location"]
                     self.dict["proximities"] = config_json["proximities"]
                     self.dict["url"] = config_json["url"]
                     self.dict["motor_pins"] = config_json["motor_pins"]
