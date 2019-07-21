@@ -16,13 +16,20 @@ class FileIO:
 
 
     def read_hand_positions_from_file(self):
-        with open("magic_clock.save", "r") as save:
-            lines = save.readlines()
-            hands = []
-            for line in lines:
-                hand = int(line)
-                hands.append(hand)
-            return hands
+        try:
+            with open("magic_clock.save", "r") as save:
+                lines = save.readlines()
+                hands = []
+                for line in lines:
+                    hand = int(line)
+                    hands.append(hand)
+                return hands
+        except FileNotFoundError:
+            new_hands = []
+            for i in range(len(config.URLS)):
+                new_hands.append(0)
+            self.write_hands_to_file(new_hands)
+            return new_hands
 
 
     def write_log(self, message):

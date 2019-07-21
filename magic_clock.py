@@ -13,7 +13,15 @@ motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
 class MagicClock:
     def __init__(self):
         self.zones = self.get_zones()
+        print(self.zones)
         self.hands = fileIO.read_hand_positions_from_file()
+
+
+    # def access_response(self, response, accessor):
+    #     split_accessor = accessor.split(".")
+    #     for item in split_accessor:
+    #         response = response[item]
+    #     return response
 
 
     def get_zones(self):
@@ -23,10 +31,13 @@ class MagicClock:
             "content-type": "application/json",
         }
         try:
-            response = requests.get(config.ZONES, headers=headers, timeout=5)
-            zones = list(filter(lambda x: "zone" in x["entity_id"], json.loads(response.text)))
-            zones_attributes = list(map(lambda y: y["attributes"], zones))
-            return zones_attributes 
+            if type(config.ZONES) is str:
+                response = requests.get(config.ZONES, headers=headers, timeout=5)
+                zones = config.zones_accessor(json.loads(response.text))
+                return zones
+            else:
+                return config.ZONES
+
         except (requests.exceptions.RequestException, ValueError):
             message = "error getting list of zones from {}".format(config.ZONES)
             print(message)
@@ -34,21 +45,21 @@ class MagicClock:
             return
 
 
-    def update_location(self, url_number):
+    def update_location(self, url_index):
         """Get location from the Home Assistant Api"""
         headers = {
             "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
-            response = requests.get(config.URLS[url_number], headers=headers, timeout=5)
+            response = requests.get(config.LOCATION_URLS[url_index], headers=headers, timeout=5)
             response_json = json.loads(response.text)
             #self.location = response_json["state"]
-            self.latitude = response_json["attributes"]["latitude"]
-            self.longitude = response_json["attributes"]["longitude"]
+            self.latitude = config.latitude_accessor(response_json)
+            self.longitude = config.longitude_accessor(response_json)
             return
         except (requests.exceptions.RequestException, ValueError):
-            message = "error getting location for {}".format(config.URLS[url_number])
+            message = "error getting location for {}".format(config.LOCATION_URLS[url_index])
             print(message)
             fileIO.write_log(message)
             return
@@ -123,7 +134,7 @@ def __main__():
         while True:         
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
-            for i in range(len(config.URLS)):
+            for i in range(len(config.LOCATION_URLS)):
                 clock.update_location(i)
                 clock.update_travelling(i)
                 clock.update_zone()

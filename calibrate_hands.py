@@ -15,7 +15,7 @@ while True:
         exit()
 
     elif left_or_right == "s":
-        if hand_num == len(fileIO.dict["motor_pins"]):
+        if hand_num == len(config.MOTOR_PINS):
             hand_num = 0
         else:
             hand_num += 1
