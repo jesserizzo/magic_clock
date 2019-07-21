@@ -4,10 +4,9 @@ import time
 
 
 class Motor:
-    def __init__(self, motor_pins, motor_delay, clock_hands):
+    def __init__(self, motor_pins, motor_delay):
         self.motor_pins = motor_pins
         self.motor_delay = motor_delay
-        self.clock_hands = clock_hands
         self.setup_GPIO()
 
 

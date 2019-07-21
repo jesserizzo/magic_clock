@@ -1,11 +1,12 @@
-from magic_clock import MagicClock
+import config
 from fileio import FileIO
+from magic_clock import MagicClock
 import motor
 import RPi.GPIO as GPIO
 import time
 
 fileIO = FileIO()
-motor = motor.Motor(fileIO.dict["motor_pins"], fileIO.dict["motor_delay"], [])
+motor = motor.Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
 magic_clock = MagicClock()
 
 
@@ -37,7 +38,7 @@ def input_lat_long():
     magic_clock.update_zone()
 
     new_position = magic_clock.update_hand_position()
-    num_steps = new_position - fileIO.dict["clock_hands"][0]
+    num_steps = new_position - magic_clock.hands[0]
 
     motor.move_clock_hand(0, num_steps)
     time.sleep(1)
@@ -52,13 +53,24 @@ def input_location_name():
     magic_clock.zone = location
     magic_clock.travelling = "stationary"
 
+    # Get the new hand position and number of steps.
+    # Set the hands field
     new_position = magic_clock.update_hand_position()
-    num_steps = new_position - fileIO.dict["clock_hands"][0]
+    num_steps = new_position - magic_clock.hands[0]
+    magic_clock.hands[0] = new_position
     
+    # Move clock hand and write new hand positions to file
     motor.move_clock_hand(0, num_steps)
-    time.sleep(1)
+    fileIO.write_hands_to_file(magic_clock.hands)
+
+    time.sleep(10)
+    
+    # Move the hands back, get the previous hands field, and write
+    # the hands positions to file
     print("Moving hand back.")
     motor.move_clock_hand(0, -num_steps)
+    magic_clock.hands[0] = new_position - num_steps
+    fileIO.write_hands_to_file(magic_clock.hands)
 
 
 while True:

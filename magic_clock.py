@@ -1,22 +1,25 @@
-import requests
+import config
+from fileio import FileIO
 import json
+from motor import Motor
+import requests
 import time
 import traceback
-from fileio import FileIO
-from motor import Motor
+
 
 fileIO = FileIO()
-motor = Motor(fileIO.dict["motor_pins"], fileIO.dict["motor_delay"], fileIO.dict["clock_hands"])
+motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
 
 class MagicClock:
     def __init__(self):
         self.zones = self.get_zones()
+        self.hands = fileIO.read_hand_positions_from_file()
 
     def get_zones(self):
         """Get the location zones from Home Assistant API"""
-        url = "{}/api/states".format(fileIO.dict["url"])
+        url = "{}/api/states".format(config.URL)
         headers = {
-            "Authorization": "Bearer {}".format(fileIO.dict["access_token"]),
+            "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
@@ -33,9 +36,9 @@ class MagicClock:
 
     def update_location(self, tracker):
         """Get  location from the Home Assistant Api"""
-        url = "{}/api/states/{}".format(fileIO.dict["url"], tracker)
+        url = "{}/api/states/{}".format(config.URL, tracker)
         headers = {
-            "Authorization": "Bearer {}".format(fileIO.dict["access_token"]),
+            "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
@@ -54,9 +57,9 @@ class MagicClock:
 
     def update_travelling(self, proximity):
         """Get proximity status from the Home Assistant Api"""
-        url = "{}/api/states/{}".format(fileIO.dict["url"], proximity)
+        url = "{}/api/states/{}".format(config.URL, proximity)
         headers = {
-            "Authorization": "Bearer {}".format(fileIO.dict["access_token"]),
+            "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
@@ -116,17 +119,20 @@ def __main__():
         while True:         
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
-            for i in range(len(fileIO.dict["trackers"])):
-                clock.update_location(fileIO.dict["trackers"][i])
-                clock.update_travelling(fileIO.dict["proximities"][i])
+            for i in range(len(config.TRACKERS)):
+                clock.update_location(config.TRACKERS[i])
+                clock.update_travelling(config.PROXIMITIES[i])
                 clock.update_zone()
                 
                 new_position = clock.update_hand_position()
-                
-                num_steps = new_position - fileIO.dict["clock_hands"][i]
+
+                num_steps = new_position - clock.hands[i]
                 motor.move_clock_hand(i, num_steps)
-                fileIO.write_hand_position_to_file(new_position, i)
-            time.sleep(fileIO.dict["update_interval"])
+
+                clock.hands[i] = new_position
+                fileIO.write_hands_to_file(clock.hands)
+
+            time.sleep(config.UPDATE_INTERVAL)
     except KeyboardInterrupt:
         fileIO.write_log("Program shutdown by user")
         motor.cleanup_GPIO()

@@ -1,10 +1,11 @@
-from motor import Motor
+import config
 from fileio import FileIO
+from motor import Motor
 
 
 hand_num = 0
 fileIO = FileIO()
-motor = Motor(fileIO.dict["motor_pins"], fileIO.dict["motor_delay"], [])
+motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY, [])
 
 
 while True:
