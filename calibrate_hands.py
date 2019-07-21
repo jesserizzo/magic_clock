@@ -5,7 +5,7 @@ from motor import Motor
 
 hand_num = 0
 fileIO = FileIO()
-motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY, [])
+motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
 
 
 while True:

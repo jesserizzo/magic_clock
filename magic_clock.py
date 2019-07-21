@@ -15,70 +15,74 @@ class MagicClock:
         self.zones = self.get_zones()
         self.hands = fileIO.read_hand_positions_from_file()
 
+
     def get_zones(self):
         """Get the location zones from Home Assistant API"""
-        url = "{}/api/states".format(config.URL)
         headers = {
             "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
-            response = requests.get(url, headers=headers, timeout=5)
+            response = requests.get(config.ZONES, headers=headers, timeout=5)
             zones = list(filter(lambda x: "zone" in x["entity_id"], json.loads(response.text)))
             zones_attributes = list(map(lambda y: y["attributes"], zones))
             return zones_attributes 
         except (requests.exceptions.RequestException, ValueError):
-            message = "error getting location for {}".format(tracker)
+            message = "error getting list of zones from {}".format(config.ZONES)
             print(message)
             fileIO.write_log(message)
             return
 
 
-    def update_location(self, tracker):
-        """Get  location from the Home Assistant Api"""
-        url = "{}/api/states/{}".format(config.URL, tracker)
+    def update_location(self, url_number):
+        """Get location from the Home Assistant Api"""
         headers = {
             "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
-            response = requests.get(url, headers=headers, timeout=5)
+            response = requests.get(config.URLS[url_number], headers=headers, timeout=5)
             response_json = json.loads(response.text)
             #self.location = response_json["state"]
             self.latitude = response_json["attributes"]["latitude"]
             self.longitude = response_json["attributes"]["longitude"]
             return
         except (requests.exceptions.RequestException, ValueError):
-            message = "error getting location for {}".format(tracker)
+            message = "error getting location for {}".format(config.URLS[url_number])
             print(message)
             fileIO.write_log(message)
             return
 
-
-    def update_travelling(self, proximity):
+    def update_travelling(self, url_number):
         """Get proximity status from the Home Assistant Api"""
-        url = "{}/api/states/{}".format(config.URL, proximity)
         headers = {
             "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
             "content-type": "application/json",
         }
         try:
-            response = requests.get(url, headers=headers, timeout=5)
+            response = requests.get(config.TRAVELLING_URLS[url_number], headers=headers, timeout=5)
             self.travelling = json.loads(response.text)["attributes"]["dir_of_travel"]
             return
         except (requests.exceptions.RequestException, ValueError):
-            message = "error getting travelling status for {}".format(proximity)
+            message = "error getting travelling status for {}".format(config.TRAVELLING_URLS[url_number])
             print(message)
             fileIO.write_log(message)
             return
 
+
     def update_zone(self):
         """Iterate through zones and return the first that we are located in."""
         for zone in self.zones:
-            diff_latitude = abs(zone["latitude"] - self.latitude) * 111139
-            diff_longitude = abs(zone["longitude"] - self.longitude) * 111139
+            latitude_meters_diff = abs(zone["latitude"] - self.latitude) * 111139
+            longitude_meters_diff = abs(zone["longitude"] - self.longitude) * 111139
 
-            if diff_latitude < zone["radius"] and diff_longitude < zone["radius"]:
+            if zone["friendly_name"] == "Home":
+                print(self.latitude)
+                print(self.longitude)
+                print(latitude_meters_diff)
+                print(longitude_meters_diff)
+
+            if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
                 self.zone = zone["friendly_name"].lower()
                 return
         self.zone = None
@@ -91,7 +95,7 @@ class MagicClock:
 
         if self.zone == "home":
             return 4
-        elif (self.zone == "towards" or self.travelling == "away_from"):
+        elif (self.travelling == "towards" or self.travelling == "away_from"):
             return 5
         elif self.zone == "mortal peril":
             return 0
@@ -119,9 +123,9 @@ def __main__():
         while True:         
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
-            for i in range(len(config.TRACKERS)):
-                clock.update_location(config.TRACKERS[i])
-                clock.update_travelling(config.PROXIMITIES[i])
+            for i in range(len(config.URLS)):
+                clock.update_location(i)
+                clock.update_travelling(i)
                 clock.update_zone()
                 
                 new_position = clock.update_hand_position()

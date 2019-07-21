@@ -73,12 +73,20 @@ def input_location_name():
     fileIO.write_hands_to_file(magic_clock.hands)
 
 
+def query_api():
+    for tracker in config.TRACKERS:
+        magic_clock.update_location(tracker)
+        print(magic_clock.latitude)
+        print(magic_clock.longitude)
+
+
 while True:
     print("Select test to run: ")
     print("1. Wiggle clock hands")
     print("2. Input name of location")
     print("3. Input Lat / Long")
     print("4. Test writing to log")
+    print("5. Test query api")
     print("(q)uit")
     user_input = input()
 
@@ -94,6 +102,9 @@ while True:
     elif user_input == "4":
         fileIO.write_log("Test writing to log")
         print("Test write to log complete")
+
+    elif user_input == "5":
+        query_api()
 
     elif user_input == "q":
         exit()

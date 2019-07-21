@@ -1,4 +1,5 @@
-config.json
+*.save
+access_token.py
 nohup.out
 magic_clock.log
 __pycache__

@@ -7,6 +7,7 @@ class FileIO:
     def write_hands_to_file(self, new_hands):
         """Write new postion of the clock hand to config file, so we know
         where it is on next program start"""
+
         with open("magic_clock.save", "w") as save:
             to_write = ""
             for hand in new_hands:
