@@ -2,3 +2,4 @@ config.json
 nohup.out
 magic_clock.log
 __pycache__
+*.pyc
