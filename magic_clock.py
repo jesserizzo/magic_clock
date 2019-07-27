@@ -38,7 +38,7 @@ class MagicClock:
             else:
                 return config.ZONES
 
-        except (requests.exceptions.RequestException, ValueError):
+        except (requests.exceptions.RequestException, ValueError, KeyError):
             message = "error getting list of zones from {}".format(config.ZONES)
             print(message)
             fileIO.write_log(message)
@@ -55,10 +55,11 @@ class MagicClock:
             response = requests.get(config.LOCATION_URLS[url_index], headers=headers, timeout=5)
             response_json = json.loads(response.text)
             #self.location = response_json["state"]
+
             self.latitude = config.latitude_accessor(response_json)
             self.longitude = config.longitude_accessor(response_json)
             return
-        except (requests.exceptions.RequestException, ValueError):
+        except (requests.exceptions.RequestException, ValueError, KeyError):
             message = "error getting location for {}".format(config.LOCATION_URLS[url_index])
             print(message)
             fileIO.write_log(message)
