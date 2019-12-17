@@ -14,7 +14,7 @@ def longitude_accessor(response):
     return response["attributes"]["longitude"]
 
 # Urls to query to get the latitude / longitude coordinates, one url per clock hand
-LOCATION_URLS = ["http://192.168.1.20:8123/api/states/device_tracker.google_maps_115948204649955307306", "http://192.168.1.20:8123/api/states/device_tracker.google_maps_103614229965349669808"]
+LOCATION_URLS = ["http://192.168.1.20:8123/api/states/device_tracker.jesse_motox4", "http://192.168.1.20:8123/api/states/device_tracker.megan_motog4"]
 
 # Max number of entries to save in magic_clock.log, on reaching this
 # limit it will overwrite the oldest entries
@@ -26,9 +26,6 @@ MOTOR_DELAY = 0.004
 
 # The pin numbers of the Raspberry Pi that are connected to each stepper motor
 MOTOR_PINS = [[6, 13, 19, 26], [12, 16, 20, 21]]
-
-# URLs for the travelling sensors
-TRAVELLING_URLS = ["http://192.168.1.20:8123/api/states/proximity.jesse_home", "http://192.168.1.20:8123/api/states/proximity.megan_home"]
 
 # Time to wait between API queries
 UPDATE_INTERVAL = 10

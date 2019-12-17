@@ -73,9 +73,9 @@ class MagicClock:
             "content-type": "application/json",
         }
         try:
-            response = requests.get(config.LOCATION_URLS[url_number], headers=headers, timeout=5)
-            self.travelling = int(json.loads(response.text)["attributes"]["velocity"])
-            return
+           response = requests.get(config.LOCATION_URLS[url_number], headers=headers, timeout=5)
+           self.travelling = int(json.loads(response.text)["attributes"]["velocity"])
+           return
         except (requests.exceptions.RequestException, ValueError):
             message = "error getting travelling status for {}".format(config.TRAVELLING_URLS[url_number])
             print(message)
