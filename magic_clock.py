@@ -2,6 +2,7 @@ import config
 from fileio import FileIO
 import json
 from motor import Motor
+import psutil
 import requests
 import time
 import traceback
@@ -9,11 +10,11 @@ import traceback
 
 fileIO = FileIO()
 motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
+time_started = time.time()
 
 class MagicClock:
     def __init__(self):
         self.zones = self.get_zones()
-        print(self.zones)
         self.hands = fileIO.read_hand_positions_from_file()
 
 
@@ -128,11 +129,14 @@ class MagicClock:
 
 def __main__():
     try:
+        
         fileIO.write_log("Program started")
         print("Program started")
         
         clock = MagicClock()
-        while True:         
+        # cronjob starts the script every 5 minutes so we want to run for slightly less than 5 minutes
+        # to ensure there won't be two instances running, potentially both moving clock hands at the same time
+        while time.time() - time_started < 280:
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(config.LOCATION_URLS)):
@@ -159,5 +163,6 @@ def __main__():
         exit()
 
 
-if __name__ == "__main__":
-    __main__()
+
+#if __name__ == "__main__":
+__main__()
