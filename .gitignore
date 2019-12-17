@@ -5,3 +5,4 @@ magic_clock.log
 __pycache__
 *.pyc
 *.swp
+config.py
