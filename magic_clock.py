@@ -73,8 +73,8 @@ class MagicClock:
             "content-type": "application/json",
         }
         try:
-            response = requests.get(config.TRAVELLING_URLS[url_number], headers=headers, timeout=5)
-            self.travelling = json.loads(response.text)["attributes"]["dir_of_travel"]
+            response = requests.get(config.LOCATION_URLS[url_number], headers=headers, timeout=5)
+            self.travelling = int(json.loads(response.text)["attributes"]["velocity"])
             return
         except (requests.exceptions.RequestException, ValueError):
             message = "error getting travelling status for {}".format(config.TRAVELLING_URLS[url_number])
@@ -108,19 +108,19 @@ class MagicClock:
 
         if self.zone == "home":
             return 4
-        elif (self.travelling == "towards" or self.travelling == "away_from"):
+        elif (self.travelling >= 5):
             return 5
         elif self.zone == "mortal peril":
             return 0
-        elif self.zone == "friends" and self.travelling == "stationary":
+        elif self.zone == "friends" and self.travelling < 5:
             return 1
-        elif self.zone == "family" and self.travelling == "stationary":
+        elif self.zone == "family" and self.travelling < 5:
             return 2
-        elif self.zone == "work" and self.travelling == "stationary":
+        elif self.zone == "work" and self.travelling < 5:
             return 3
-        elif self.zone == "school" and self.travelling == "stationary":
+        elif self.zone == "school" and self.travelling < 5:
             return 6
-        elif self.zone == "hospital" and self.travelling == "stationary":
+        elif self.zone == "hospital" and self.travelling < 5:
             return 7
         else:
             # Point clock hand to "elsewhere".
