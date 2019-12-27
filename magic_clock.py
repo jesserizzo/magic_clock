@@ -86,12 +86,6 @@ class MagicClock:
             latitude_meters_diff = abs(zone["latitude"] - self.latitude) * 111139
             longitude_meters_diff = abs(zone["longitude"] - self.longitude) * 111139
 
-            if zone["friendly_name"] == "Home":
-#                print(self.latitude)
-#                print(self.longitude)
-#                print(latitude_meters_diff)
-#                print(longitude_meters_diff)
-
             if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
                 self.zone = zone["friendly_name"].lower()
                 return
