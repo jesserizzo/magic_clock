@@ -10,7 +10,6 @@ import traceback
 
 fileIO = FileIO()
 motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
-time_started = time.time()
 
 class MagicClock:
     def __init__(self):
@@ -41,7 +40,6 @@ class MagicClock:
 
         except (requests.exceptions.RequestException, ValueError, KeyError):
             message = "error getting list of zones from {}".format(config.ZONES)
-            print(message)
             fileIO.write_log(message)
             return
 
@@ -62,7 +60,6 @@ class MagicClock:
             return
         except (requests.exceptions.RequestException, ValueError, KeyError):
             message = "error getting location for {}".format(config.LOCATION_URLS[url_index])
-            print(message)
             fileIO.write_log(message)
             return
 
@@ -78,7 +75,6 @@ class MagicClock:
            return
         except (requests.exceptions.RequestException, ValueError, KeyError):
             message = "error getting travelling status for {}".format(config.LOCATION_URLS[url_number])
-            print(message)
             fileIO.write_log(message)
             self.travelling = 0
             return
@@ -91,10 +87,10 @@ class MagicClock:
             longitude_meters_diff = abs(zone["longitude"] - self.longitude) * 111139
 
             if zone["friendly_name"] == "Home":
-                print(self.latitude)
-                print(self.longitude)
-                print(latitude_meters_diff)
-                print(longitude_meters_diff)
+#                print(self.latitude)
+#                print(self.longitude)
+#                print(latitude_meters_diff)
+#                print(longitude_meters_diff)
 
             if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
                 self.zone = zone["friendly_name"].lower()
@@ -130,21 +126,17 @@ class MagicClock:
 
 def __main__():
     try:
-        
         fileIO.write_log("Program started")
-        print("Program started")
-        
         clock = MagicClock()
-        # cronjob starts the script every 5 minutes so we want to run for slightly less than 5 minutes
-        # to ensure there won't be two instances running, potentially both moving clock hands at the same time
-        while time.time() - time_started < 280:
+
+        while (True):
             # Iterate through how ever many trackers you have set up
             # Getting the new position and moving the clock hand for each
             for i in range(len(config.LOCATION_URLS)):
                 clock.update_location(i)
                 clock.update_travelling(i)
                 clock.update_zone()
-                
+
                 new_position = clock.update_hand_position()
 
                 num_steps = new_position - clock.hands[i]
@@ -161,8 +153,6 @@ def __main__():
     except:
         fileIO.write_log(traceback.format_exc())
         traceback.print_exc()
-        exit()
-
 
 
 #if __name__ == "__main__":

@@ -40,6 +40,7 @@ class FileIO:
                         datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message
                     )
                 )
+                print(message)
             with open("magic_clock.log", "r+") as log:
                 # If there is too many lines in the log, go back to the beginning
                 # of the file, over write with the number of lines we should
