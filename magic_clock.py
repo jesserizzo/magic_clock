@@ -76,10 +76,11 @@ class MagicClock:
            response = requests.get(config.LOCATION_URLS[url_number], headers=headers, timeout=5)
            self.travelling = int(json.loads(response.text)["attributes"]["velocity"])
            return
-        except (requests.exceptions.RequestException, ValueError):
-            message = "error getting travelling status for {}".format(config.TRAVELLING_URLS[url_number])
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            message = "error getting travelling status for {}".format(config.LOCATION_URLS[url_number])
             print(message)
             fileIO.write_log(message)
+            self.travelling = 0
             return
 
 
