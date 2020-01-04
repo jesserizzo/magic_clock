@@ -56,7 +56,6 @@ class MagicClock:
             response = requests.get(config.LOCATION_URLS[url_index], headers=headers, timeout=5)
             response.raise_for_status()
             response_json = json.loads(response.text)
-            #self.location = response_json["state"]
 
             self.latitude = config.latitude_accessor(response_json)
             self.longitude = config.longitude_accessor(response_json)
@@ -97,6 +96,8 @@ class MagicClock:
                 if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
                     self.zone = zone["friendly_name"].lower()
                     return
+            self.zone = None
+            return
         except:
             fileIO.write_log("Error while attempting to find current zone")
             fileIO.write_log(traceback.format_exc())
@@ -132,9 +133,6 @@ class MagicClock:
             fileIO.write_log(traceback.format_exc())
 
 def main():
-    fileIO.write_log("Waiting to start program")
-    # hack to give network time to start up when starting program at boot time
-    time.sleep(60)
     fileIO.write_log("Program started")
 
     clock = MagicClock()
