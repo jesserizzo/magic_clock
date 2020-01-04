@@ -1,6 +1,7 @@
 import config
 from datetime import datetime
 import json
+import pathlib
 
 class FileIO:
 
@@ -8,7 +9,7 @@ class FileIO:
         """Write new postion of the clock hand to config file, so we know
         where it is on next program start"""
 
-        with open("magic_clock.save", "w") as save:
+        with open("/home/pi/magic_clock/magic_clock.save", "w") as save:
             to_write = ""
             for hand in new_hands:
                 to_write += "{}\n".format(hand)
@@ -17,7 +18,7 @@ class FileIO:
 
     def read_hand_positions_from_file(self):
         try:
-            with open("magic_clock.save", "r") as save:
+            with open("/home/pi/magic_clock/magic_clock.save", "r") as save:
                 lines = save.readlines()
                 hands = []
                 for line in lines:
@@ -34,14 +35,14 @@ class FileIO:
 
     def write_log(self, message):
         try:
-            with open("magic_clock.log", "a+") as log:
+            with open("/home/pi/magic_clock/magic_clock.log", "a+") as log:
                 log.write(
                     "{} - {}\n".format(
                         datetime.now().strftime("%Y-%m-%d %H:%M:%S"), message
                     )
                 )
                 print(message)
-            with open("magic_clock.log", "r+") as log:
+            with open(pathlib.Path(__file__).parent / "magic_clock.log", "r+") as log:
                 # If there is too many lines in the log, go back to the beginning
                 # of the file, over write with the number of lines we should
                 # have and truncate the rest of the file
