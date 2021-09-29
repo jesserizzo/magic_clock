@@ -13,7 +13,7 @@ motor = Motor(config.MOTOR_PINS, config.MOTOR_DELAY)
 
 class MagicClock:
     def __init__(self):
-        self.zones = self.get_zones()
+#        self.zones = self.get_zones()
         self.hands = fileIO.read_hand_positions_from_file()
 
 
@@ -24,26 +24,26 @@ class MagicClock:
     #     return response
 
 
-    def get_zones(self):
-        """Get the location zones from Home Assistant API"""
-        headers = {
-            "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
-            "content-type": "application/json",
-        }
-        try:
-            if type(config.ZONES) is str:
-                response = requests.get(config.ZONES, headers=headers, timeout=5)
-                response.raise_for_status()
-                zones = config.zones_accessor(json.loads(response.text))
-                return zones
-            else:
-                return config.ZONES
-
-        except:
-            message = "error getting list of zones from {}".format(config.ZONES)
-            fileIO.write_log(message)
-            fileIO.write_log(traceback.format_exc())
-            return []
+#    def get_zones(self):
+#        """Get the location zones from Home Assistant API"""
+#        headers = {
+#            "Authorization": "Bearer {}".format(config.ACCESS_TOKEN),
+#            "content-type": "application/json",
+#        }
+#        try:
+#            if type(config.ZONES) is str:
+#                response = requests.get(config.ZONES, headers=headers, timeout=5)
+#                response.raise_for_status()
+#                zones = config.zones_accessor(json.loads(response.text))
+#                return zones
+#            else:
+#                return config.ZONES
+#
+#        except:
+#            message = "error getting list of zones from {}".format(config.ZONES)
+#            fileIO.write_log(message)
+#            fileIO.write_log(traceback.format_exc())
+#            return []
 
 
     def update_location(self, url_index):
@@ -57,8 +57,9 @@ class MagicClock:
             response.raise_for_status()
             response_json = json.loads(response.text)
 
-            self.latitude = config.latitude_accessor(response_json)
-            self.longitude = config.longitude_accessor(response_json)
+            self.zone = response_json["state"]
+#            self.latitude = config.latitude_accessor(response_json)
+#            self.longitude = config.longitude_accessor(response_json)
             return
         except ():
             message = "error getting location for {}".format(config.LOCATION_URLS[url_index])
@@ -76,7 +77,8 @@ class MagicClock:
         try:
            response = requests.get(config.LOCATION_URLS[url_number], headers=headers, timeout=5)
            response.raise_for_status()
-           self.travelling = int(json.loads(response.text)["attributes"]["velocity"])
+           self.travelling = int(json.loads(response.text)["attributes"]["speed"])
+
            return
         except:
             message = "error getting travelling status for {}".format(config.LOCATION_URLS[url_number])
@@ -86,23 +88,23 @@ class MagicClock:
             return
 
 
-    def update_zone(self):
-        """Iterate through zones and return the first that we are located in."""
-        try:
-            for zone in self.zones:
-                latitude_meters_diff = abs(zone["latitude"] - self.latitude) * 111139
-                longitude_meters_diff = abs(zone["longitude"] - self.longitude) * 111139
-
-                if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
-                    self.zone = zone["friendly_name"].lower()
-                    return
-            self.zone = None
-            return
-        except:
-            fileIO.write_log("Error while attempting to find current zone")
-            fileIO.write_log(traceback.format_exc())
-            self.zone = None
-            return
+#    def update_zone(self):
+#        """Iterate through zones and return the first that we are located in."""
+#        try:
+#            for zone in self.zones:
+#                latitude_meters_diff = abs(zone["latitude"] - self.latitude) * 111139
+#                longitude_meters_diff = abs(zone["longitude"] - self.longitude) * 111139
+#
+#                if latitude_meters_diff < zone["radius"] and longitude_meters_diff < zone["radius"]:
+#                    self.zone = zone["friendly_name"].lower()
+#                    return
+#            self.zone = None
+#            return
+#        except:
+#            fileIO.write_log("Error while attempting to find current zone")
+#            fileIO.write_log(traceback.format_exc())
+#            self.zone = None
+#            return
 
 
     def update_hand_position(self):
@@ -143,7 +145,7 @@ def main():
             for i in range(len(config.LOCATION_URLS)):
                 clock.update_location(i)
                 clock.update_travelling(i)
-                clock.update_zone()
+#                clock.update_zone()
 
                 new_position = clock.update_hand_position()
 

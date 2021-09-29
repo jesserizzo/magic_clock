@@ -27,7 +27,7 @@ class FileIO:
                 return hands
         except FileNotFoundError:
             new_hands = []
-            for i in range(len(config.URLS)):
+            for i in range(len(config.LOCATION_URLS)):
                 new_hands.append(0)
             self.write_hands_to_file(new_hands)
             return new_hands
